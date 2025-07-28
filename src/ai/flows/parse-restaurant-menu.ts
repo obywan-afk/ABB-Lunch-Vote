@@ -42,7 +42,7 @@ const prompt = ai.definePrompt({
   - Your output should be a single string with each menu item on a new line. Do not include markdown formatting.
   
   For each menu item, you MUST determine if it is "Vegan", "Vegetarian", or contains "Meat" and append the appropriate label.
-  - Use the following mapping: 'VEG' or 'VE' for Vegan, 'VS' for Vegetarian.
+  - Use the following mapping: 'VE' or 'VEG' for Vegan, 'VS' for Vegetarian.
   - If an item is not explicitly marked Vegan or Vegetarian, assume it contains Meat if it's a main course. Soups and desserts can be left unlabeled if unclear.
   - Append the label in parentheses, e.g., "Spinach Lasagna (Vegetarian)".
   
@@ -60,7 +60,13 @@ const parseRestaurantMenuFlow = ai.defineFlow(
     outputSchema: ParseRestaurantMenuOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (error) {
+      console.error(`Error parsing menu for ${input.restaurantName}:`, error);
+      // If AI parsing fails, return the raw menu to be displayed as a fallback.
+      return { parsedMenu: input.menuText };
+    }
   }
 );
