@@ -36,8 +36,11 @@ const prompt = ai.definePrompt({
 
   Your task is to take the raw menu text from a restaurant and format it into a clean, easy-to-read format.
   The restaurant name is: {{{restaurantName}}}.
+  
+  The menu text might be plain text or a JSON string. Your output should be a single string with each menu item on a new line. Do not include markdown formatting.
+  
   Here is the raw menu text:
-  {{menuText}}
+  {{{menuText}}}
 
   Please extract the menu items and present them in a consistent format.
 `,
