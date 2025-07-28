@@ -10,25 +10,27 @@ import { Badge } from '@/components/ui/badge';
 
 async function fetchTellusMenu(): Promise<string> {
   try {
-    const response = await fetch('https://www.compass-group.fi/menuapi/feed/rss/current-week?costNumber=3105&language=en');
+    const response = await fetch('/api/tellus');
     if (!response.ok) {
       return "Could not fetch Tellus menu.";
     }
     const text = await response.text();
     
     // Basic XML parsing to find Tuesday's menu
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(text, "text/xml");
-    const items = xmlDoc.getElementsByTagName('item');
-    for (let i = 0; i < items.length; i++) {
-      const title = items[i].getElementsByTagName('title')[0].textContent;
-      if (title?.toLowerCase().includes('tuesday')) {
-        const description = items[i].getElementsByTagName('description')[0].textContent;
-        // The description is HTML, so we need to clean it up.
-        const descriptionElement = document.createElement('div');
-        descriptionElement.innerHTML = description || '';
-        return descriptionElement.innerText || "Menu for Tuesday not found in description.";
-      }
+    if (typeof window !== 'undefined') {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+        const items = xmlDoc.getElementsByTagName('item');
+        for (let i = 0; i < items.length; i++) {
+          const title = items[i].getElementsByTagName('title')[0].textContent;
+          if (title?.toLowerCase().includes('tuesday')) {
+            const description = items[i].getElementsByTagName('description')[0].textContent;
+            // The description is HTML, so we need to clean it up.
+            const descriptionElement = document.createElement('div');
+            descriptionElement.innerHTML = description || '';
+            return descriptionElement.innerText || "Menu for Tuesday not found in description.";
+          }
+        }
     }
     return "Tuesday menu not found for Tellus.";
   } catch (error) {
