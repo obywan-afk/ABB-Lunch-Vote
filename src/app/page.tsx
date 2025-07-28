@@ -8,6 +8,35 @@ import { RestaurantCard, RestaurantCardSkeleton } from '@/components/restaurant-
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 
+async function fetchTellusMenu(): Promise<string> {
+  try {
+    const response = await fetch('https://www.compass-group.fi/menuapi/feed/rss/current-week?costNumber=3105&language=en');
+    if (!response.ok) {
+      return "Could not fetch Tellus menu.";
+    }
+    const text = await response.text();
+    
+    // Basic XML parsing to find Tuesday's menu
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(text, "text/xml");
+    const items = xmlDoc.getElementsByTagName('item');
+    for (let i = 0; i < items.length; i++) {
+      const title = items[i].getElementsByTagName('title')[0].textContent;
+      if (title?.toLowerCase().includes('tuesday')) {
+        const description = items[i].getElementsByTagName('description')[0].textContent;
+        // The description is HTML, so we need to clean it up.
+        const descriptionElement = document.createElement('div');
+        descriptionElement.innerHTML = description || '';
+        return descriptionElement.innerText || "Menu for Tuesday not found in description.";
+      }
+    }
+    return "Tuesday menu not found for Tellus.";
+  } catch (error) {
+    console.error("Error fetching Tellus menu:", error);
+    return "Error fetching Tellus menu.";
+  }
+}
+
 export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(initialRestaurants);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,8 +62,18 @@ export default function Home() {
     const processMenus = async () => {
       setIsLoading(true);
       try {
-        const parsedRestaurants = await Promise.all(
+        const restaurantsWithData = await Promise.all(
           initialRestaurants.map(async (restaurant) => {
+            if (restaurant.id === 'tellus') {
+              const menu = await fetchTellusMenu();
+              return { ...restaurant, rawMenu: menu };
+            }
+            return restaurant;
+          })
+        );
+        
+        const parsedRestaurants = await Promise.all(
+          restaurantsWithData.map(async (restaurant) => {
             if (!restaurant.rawMenu) {
               return { ...restaurant, parsedMenu: "Menu not available." };
             }

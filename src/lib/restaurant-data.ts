@@ -1,11 +1,11 @@
 import type { Restaurant } from '@/lib/types';
 
 // Raw menu text extracted from user prompt. Focused on Tuesday where available.
-const tellusRawMenu = `Sweet potato soup (VE, G)
-Chicken and vegetable stir-fry with rice noodles (M, G)
-Mushroom and spinach lasagna (L)
-Side salad with vinaigrette (VE, G)
-Blueberry pie with vanilla sauce (L, G)`;
+const tellusRawMenu = `TUE
+Carrot-coconut soup (L,G,VE)
+Chili con carne (M,G) and rice
+Vegetable-cashew wok (M,G,VE)
+Dessert: Chocolate mousse (L,G)`;
 
 const porRawMenu = `Kebab sauce (m,g,vs,so, spicy, contains beef), garlic seasoned yoghurt (l,g), rice (m,g) 7.65
 Italian style meatball and pasta soup (m,se,ka, contains pork) 6.55
