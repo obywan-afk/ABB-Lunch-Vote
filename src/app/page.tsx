@@ -7,12 +7,13 @@ import { parseRestaurantMenu } from '@/ai/flows/parse-restaurant-menu';
 import { RestaurantCard, RestaurantCardSkeleton } from '@/components/restaurant-card';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 async function fetchTellusMenu(): Promise<string> {
   try {
     const response = await fetch('/api/tellus');
     if (!response.ok) {
-      return "Could not fetch Tellus menu.";
+      return `Could not fetch Tellus menu. Status: ${response.status}`;
     }
     const text = await response.text();
     
@@ -28,7 +29,7 @@ async function fetchTellusMenu(): Promise<string> {
             // The description is HTML, so we need to clean it up.
             const descriptionElement = document.createElement('div');
             descriptionElement.innerHTML = description || '';
-            return descriptionElement.innerText || "Menu for Tuesday not found in description.";
+            return descriptionElement.innerText.trim() || "Menu for Tuesday not found in description.";
           }
         }
     }
@@ -38,6 +39,7 @@ async function fetchTellusMenu(): Promise<string> {
     return "Error fetching Tellus menu.";
   }
 }
+
 
 export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(initialRestaurants);
@@ -51,12 +53,14 @@ export default function Home() {
       const now = new Date();
       const day = now.getDay();
       const hour = now.getHours();
+      // Voting is open on Monday (1) and Tuesday (2) before noon (12:00)
       const votingActive = day === 1 || (day === 2 && hour < 12);
       setIsVotingOpen(votingActive);
     };
 
     checkVotingTime();
-    const interval = setInterval(checkVotingTime, 60000);
+    // Check every minute
+    const interval = setInterval(checkVotingTime, 60000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -76,28 +80,35 @@ export default function Home() {
         
         const parsedRestaurants = await Promise.all(
           restaurantsWithData.map(async (restaurant) => {
-            if (!restaurant.rawMenu) {
+            if (!restaurant.rawMenu || restaurant.rawMenu.trim() === '') {
               return { ...restaurant, parsedMenu: "Menu not available." };
             }
-            const result = await parseRestaurantMenu({
-              restaurantName: restaurant.name,
-              menuText: restaurant.rawMenu,
-            });
-            return {
-              ...restaurant,
-              parsedMenu: result.parsedMenu,
-            };
+            try {
+              const result = await parseRestaurantMenu({
+                restaurantName: restaurant.name,
+                menuText: restaurant.rawMenu,
+              });
+              return {
+                ...restaurant,
+                parsedMenu: result.parsedMenu,
+              };
+            } catch (error) {
+               console.error(`Failed to parse menu for ${restaurant.name}:`, error);
+               // Fallback to raw menu if parsing fails for a specific restaurant
+               return { ...restaurant, parsedMenu: restaurant.rawMenu };
+            }
           })
         );
         setRestaurants(parsedRestaurants);
       } catch (error) {
-        console.error("Failed to parse menus:", error);
+        console.error("Failed to process menus:", error);
         toast({
           title: "Error",
-          description: "Could not load menus. Displaying raw data.",
+          description: "Could not load all menus. Displaying available data.",
           variant: "destructive",
         });
-        setRestaurants(initialRestaurants.map(r => ({...r, parsedMenu: r.rawMenu})));
+        // Fallback to initial data with raw menus if the whole process fails
+        setRestaurants(initialRestaurants.map(r => ({...r, parsedMenu: r.rawMenu || "Menu not available."})));
       }
       setIsLoading(false);
     };
@@ -122,8 +133,16 @@ export default function Home() {
 
   const winningRestaurant = useMemo(() => {
      if (isLoading) return null;
-     const sortedByVotes = [...restaurants].sort((a, b) => b.votes - a.votes);
+     // Sort by votes, then by name to have a stable sort for ties
+     const sortedByVotes = [...restaurants].sort((a, b) => {
+        if (b.votes !== a.votes) {
+            return b.votes - a.votes;
+        }
+        return a.name.localeCompare(b.name);
+     });
+
      const leader = sortedByVotes[0];
+     // A winner is only declared if they have at least 5 votes.
      if (leader && leader.votes >= 5) {
        return leader;
      }
@@ -154,7 +173,7 @@ export default function Home() {
           </div>
           <div className="text-center md:text-right">
             <h2 className="text-lg font-semibold">Tuesday Lunch Poll</h2>
-            <Badge variant={isVotingOpen ? "secondary" : "destructive"} className={isVotingOpen ? 'bg-green-100 text-green-900' : ''}>
+            <Badge variant={isVotingOpen ? "secondary" : "destructive"} className={cn(isVotingOpen ? 'bg-green-100 text-green-900' : '', 'transition-colors')}>
                 {votingStatusText}
             </Badge>
           </div>
