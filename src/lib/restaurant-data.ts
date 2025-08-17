@@ -13,13 +13,13 @@ const valajaRawMenu = `[{"name": "Pea and broad bean rissoles", "tags": ["M", "G
 
 const factoryRawMenu = `[{"name": "Japanese misosoup", "tags": ["M", "G", "VS", "VE", "Tofu"]}, {"name": "Factory's meatballs in smoked cheese sauce", "tags": ["L", "G"]}, {"name": "Tandoori-yogurt marinated chicken steaks", "tags": ["L", "G", "VS"]}, {"name": "Homemade spinach pancakes with lingonberry jam", "tags": ["L"]}, {"name": "Chipotle chili roasted seasonal vegetables with nachos", "tags": ["VE", "G", "VS"]}, {"name": "Factory's delicious ice cream bar", "tags": ["L", "G"]}]`;
 
-const ravintolaValimoRawMenu = `Koskenlaskijan-savuporokeitto (L,G)
-Pintasavustettua lohta voi-valkoviinikastikkeessa (L,G) perunamuusi (L,G)
-Broilerin rintafileet tulisella basilika-kookoskastikkeella (M,G) yrttiriisi (M,G)
-Chilillä ja goudajuustolla ryyditetyt uunimakkarat (L,G)
-Kukka-parsakaali gratiini cheddarjuustolla (L,G)
-Wokattuja tuoreita kasviksia tofulla (M,G,VE)
-Domino-marjarahka (L,G)`;
+const ravintolaValimoRawMenu = `Smoked reindeer soup with Koskenlaskija cheese (L,G)
+Lightly smoked salmon with butter-white wine sauce (L,G), mashed potatoes (L,G)
+Chicken breast fillets with spicy basil-coconut sauce (M,G), herb rice (M,G)
+Oven-baked sausages spiced with chili and gouda cheese (L,G)
+Cauliflower-broccoli gratin with cheddar cheese (L,G)
+Wokked fresh vegetables with tofu (M,G,VE)
+Domino quark with berries (L,G)`;
 
 export const initialRestaurants: Restaurant[] = [
     { id: 'tellus', name: 'Tellus', url: 'https://www.compass-group.fi/menuapi/feed/rss/current-week?costNumber=3105&language=en/', rawMenu: tellusRawMenu, votes: 0 },
