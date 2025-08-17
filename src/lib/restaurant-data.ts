@@ -5,9 +5,9 @@ const tellusRawMenu = ``; // This will be fetched from the live API.
 
 const porRawMenu = `[{"name": "Sweet potato soup", "tags": ["VE", "G"]}, {"name": "Chicken and vegetable stir-fry with rice noodles", "tags": ["M", "G"]}, {"name": "Mushroom and spinach lasagna", "tags": ["L"]}, {"name": "Side salad with vinaigrette", "tags": ["VE", "G"]}, {"name": "Blueberry pie with vanilla sauce", "tags": ["L", "G"]}]`;
 
-const valimoParkRawMenu = `GRILLISTÄ LAUTASANNOKSINA 13,70 €: Savulohta, yrttiperunaa, kananmunakastiketta (L,G) TAI Punajuuripihvit tai fritattua tofua, yrttiperunaa ja kermaviilikastiketta (L,G, saatavilla VEG) TAI Metsästäjänleipä; naudan jauhelihapihvi, sienikastiketta, gratinoitua juustoa, ranskalaiset (L) sivusalaattia
-Viikon salaattivaihtoehto:Kana-aurajuustosalaatti (L,G) 12,50 € TAI Uuniperuna katkaraputäytteellä ja raikasta salaattia (L,G) 12,50 €
-Dessert: DIY Pehmis (L, saatavilla G)`;
+const valimoParkRawMenu = `FROM THE GRILL 13,70 €: Smoked salmon, herb potatoes, egg sauce (L,G) OR Beetroot patties or fried tofu, herb potatoes and sour cream sauce (L,G, available VEG) OR Hunter's sandwich; minced beef steak, mushroom sauce, gratinated cheese, french fries (L) side salad
+Week's salad option: Chicken and blue cheese salad (L,G) 12,50 € OR Baked potato with shrimp filling and fresh salad (L,G) 12,50 €
+Dessert: DIY Soft ice cream (L, available G)`;
 
 const valajaRawMenu = `[{"name": "Pea and broad bean rissoles", "tags": ["M", "G", "VE"]}, {"name": "Ratatouille vegetables", "tags": ["M", "G", "VE"]}, {"name": "Aioli with basil", "tags": ["M", "G", "VE"]}, {"name": "Italian style meatball and pasta soup", "tags": ["M", "SE", "KA", "Pork"]}, {"name": "Kebab sauce", "tags": ["M", "G", "VS", "SO", "Spicy", "Beef"]}, {"name": "Garlic seasoned yoghurt", "tags": ["L", "G"]}, {"name": "Rice", "tags": ["M", "G"]}, {"name": "Banana and peppermint milkshake", "tags": ["L", "G"]}, {"name": "Sweet chili and smoked salmon salad", "tags": ["M", "G", "VS"]}]`;
 
