@@ -8,10 +8,13 @@ import { RestaurantCard, RestaurantCardSkeleton } from '@/components/restaurant-
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-async function fetchTellusMenu(): Promise<string> {
+type Language = 'en' | 'fi';
+
+async function fetchTellusMenu(language: Language): Promise<string> {
   try {
-    const response = await fetch('/api/tellus');
+    const response = await fetch(`/api/tellus?language=${language}`);
     if (!response.ok) {
       return `Could not fetch Tellus menu. Status: ${response.status}`;
     }
@@ -24,16 +27,16 @@ async function fetchTellusMenu(): Promise<string> {
         const items = xmlDoc.getElementsByTagName('item');
         for (let i = 0; i < items.length; i++) {
           const title = items[i].getElementsByTagName('title')[0].textContent;
-          if (title?.toLowerCase().includes('tuesday')) {
+          if (title?.toLowerCase().includes('tuesday') || title?.toLowerCase().includes('tiistai')) {
             const description = items[i].getElementsByTagName('description')[0].textContent;
             // The description is HTML, so we need to clean it up.
             const descriptionElement = document.createElement('div');
             descriptionElement.innerHTML = description || '';
-            return descriptionElement.innerText.trim() || "Menu for Tuesday not found in description.";
+            return descriptionElement.innerText.trim() || `Menu for Tuesday not found in description. Language: ${language}`;
           }
         }
     }
-    return "Tuesday menu not found for Tellus.";
+    return `Tuesday menu not found for Tellus. Language: ${language}`;
   } catch (error) {
     console.error("Error fetching Tellus menu:", error);
     return "Error fetching Tellus menu.";
@@ -46,6 +49,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [votedRestaurantId, setVotedRestaurantId] = useState<string | null>(null);
   const [isVotingOpen, setIsVotingOpen] = useState(false);
+  const [language, setLanguage] = useState<Language>('en');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,8 +75,12 @@ export default function Home() {
         const restaurantsWithData = await Promise.all(
           initialRestaurants.map(async (restaurant) => {
             if (restaurant.id === 'tellus') {
-              const menu = await fetchTellusMenu();
-              return { ...restaurant, rawMenu: menu };
+              const menu = await fetchTellusMenu(language);
+              if (language === 'en') {
+                return { ...restaurant, rawMenu: menu };
+              } else {
+                return { ...restaurant, rawMenuFi: menu };
+              }
             }
             return restaurant;
           })
@@ -80,22 +88,25 @@ export default function Home() {
         
         const parsedRestaurants = await Promise.all(
           restaurantsWithData.map(async (restaurant) => {
-            if (!restaurant.rawMenu || restaurant.rawMenu.trim() === '') {
-              return { ...restaurant, parsedMenu: "Menu not available." };
+            const menuToParse = language === 'en' ? restaurant.rawMenu : restaurant.rawMenuFi;
+            const parsedMenuKey = language === 'en' ? 'parsedMenu' : 'parsedMenuFi';
+
+            if (!menuToParse || menuToParse.trim() === '') {
+              return { ...restaurant, [parsedMenuKey]: "Menu not available." };
             }
             try {
               const result = await parseRestaurantMenu({
                 restaurantName: restaurant.name,
-                menuText: restaurant.rawMenu,
+                menuText: menuToParse,
               });
               return {
                 ...restaurant,
-                parsedMenu: result.parsedMenu,
+                [parsedMenuKey]: result.parsedMenu,
               };
             } catch (error) {
                console.error(`Failed to parse menu for ${restaurant.name}:`, error);
                // Fallback to raw menu if parsing fails for a specific restaurant
-               return { ...restaurant, parsedMenu: restaurant.rawMenu };
+               return { ...restaurant, [parsedMenuKey]: menuToParse };
             }
           })
         );
@@ -108,14 +119,14 @@ export default function Home() {
           variant: "destructive",
         });
         // Fallback to initial data with raw menus if the whole process fails
-        setRestaurants(initialRestaurants.map(r => ({...r, parsedMenu: r.rawMenu || "Menu not available."})));
+        setRestaurants(initialRestaurants.map(r => ({...r, parsedMenu: r.rawMenu || "Menu not available.", parsedMenuFi: r.rawMenuFi || "Menu not available."})));
       }
       setIsLoading(false);
     };
 
     processMenus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [language]);
   
   const handleVote = (id: string) => {
     if (!isVotingOpen || votedRestaurantId) return;
@@ -158,6 +169,10 @@ export default function Home() {
     return "Voting is currently closed.";
   }, [isVotingOpen]);
 
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value as Language);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground py-6 shadow-md sticky top-0 z-20">
@@ -171,11 +186,19 @@ export default function Home() {
               Lunch Vote
             </h1>
           </div>
-          <div className="text-center md:text-right">
-            <h2 className="text-lg font-semibold">Tuesday Lunch Poll</h2>
-            <Badge variant={isVotingOpen ? "secondary" : "destructive"} className={cn(isVotingOpen ? 'bg-green-100 text-green-900' : '', 'transition-colors')}>
-                {votingStatusText}
-            </Badge>
+           <div className="flex flex-col items-center gap-2">
+            <div className="text-center md:text-right">
+              <h2 className="text-lg font-semibold">Tuesday Lunch Poll</h2>
+              <Badge variant={isVotingOpen ? "secondary" : "destructive"} className={cn(isVotingOpen ? 'bg-green-100 text-green-900' : '', 'transition-colors')}>
+                  {votingStatusText}
+              </Badge>
+            </div>
+            <Tabs defaultValue="en" onValueChange={handleLanguageChange} className="w-[100px]">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="en">EN</TabsTrigger>
+                <TabsTrigger value="fi">FI</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
       </header>
@@ -184,17 +207,20 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
           {isLoading
             ? Array.from({ length: 6 }).map((_, index) => <RestaurantCardSkeleton key={index} />)
-            : restaurants.map((restaurant) => (
-                <RestaurantCard
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  onVote={() => handleVote(restaurant.id)}
-                  userHasVoted={!!votedRestaurantId}
-                  hasVotedForThis={votedRestaurantId === restaurant.id}
-                  isWinner={winningRestaurant?.id === restaurant.id}
-                  isVotingOpen={isVotingOpen}
-                />
-              ))}
+            : restaurants.map((restaurant) => {
+                const menuToDisplay = language === 'en' ? restaurant.parsedMenu : restaurant.parsedMenuFi;
+                return (
+                  <RestaurantCard
+                    key={restaurant.id}
+                    restaurant={{...restaurant, parsedMenu: menuToDisplay}}
+                    onVote={() => handleVote(restaurant.id)}
+                    userHasVoted={!!votedRestaurantId}
+                    hasVotedForThis={votedRestaurantId === restaurant.id}
+                    isWinner={winningRestaurant?.id === restaurant.id}
+                    isVotingOpen={isVotingOpen}
+                  />
+                )
+            })}
         </div>
       </main>
        <footer className="py-6 mt-8 bg-secondary/50">
