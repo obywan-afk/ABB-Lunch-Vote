@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Restaurant } from '@/lib/types';
 import { initialRestaurants } from '@/lib/restaurant-data';
 import { parseRestaurantMenu } from '@/ai/flows/parse-restaurant-menu';
@@ -51,6 +52,15 @@ export default function Home() {
   const [isVotingOpen, setIsVotingOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check for authentication
+    const isAuthenticated = sessionStorage.getItem('abb-lunch-vote-auth') === 'true';
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     const checkVotingTime = () => {
