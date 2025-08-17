@@ -145,8 +145,8 @@ export default function Home() {
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
              <svg role="img" aria-label="ABB Logo" width="120" height="40" viewBox="0 0 120 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.4 27.2h-3.2L8 16.8h.2l3.2 10.4zM2.3 8v24h18.4V8H2.3zm15.4 21H5.5V11h12.2v18zM31.1 8v24h18.4V8H31.1zm15.4 21h-12V11h12v18zM38.8 27.2h-3.2L32.4 16.8h.2l3.2 10.4zM55.9 8v24h18.4V8H55.9zm15.4 21H59.1V11h12.2v18zM63.6 27.2h-3.2L57.2 16.8h.2l3.2 10.4z" />
-                <path d="M96.7 13.9c-1.3-1.3-3.1-2.1-5.1-2.1s-3.8.8-5.1 2.1-2.1 3.1-2.1 5.1 2 5.1 5.1 5.1 3.8-.8 5.1-2.1c1.3-1.4 2.1-3.2 2.1-5.1-.1-2-.9-3.7-2.1-5.1zm-8.4 8.4c-1.2 0-2.3-.5-3.1-1.3s-1.3-1.9-1.3-3.1.5-2.3 1.3-3.1 1.9-1.3 3.1-1.3 2.3.5 3.1 1.3 1.3 1.9 1.3 3.1c0 2.4-1.9 4.4-4.4 4.4zM118.8 32h-3.7l-7.9-12.1v12.1h-3V8h3.7l7.9 12.1V8h3v24z" />
+              <path d="M14.4 27.2h-3.2L8 16.8h.2l3.2 10.4zM2.3 8v24h18.4V8H2.3zm15.4 21H5.5V11h12.2v18zM31.1 8v24h18.4V8H31.1zm15.4 21h-12V11h12v18zM38.8 27.2h-3.2L32.4 16.8h.2l3.2 10.4zM55.9 8v24h18.4V8H55.9zm15.4 21H59.1V11h12.2v18zM63.6 27.2h-3.2L57.2 16.8h.2l3.2 10.4z" />
+              <path d="M96.7 13.9c-1.3-1.3-3.1-2.1-5.1-2.1s-3.8.8-5.1 2.1-2.1 3.1-2.1 5.1 2 5.1 5.1 5.1 3.8-.8 5.1-2.1c1.3-1.4 2.1-3.2 2.1-5.1-.1-2-.9-3.7-2.1-5.1zm-8.4 8.4c-1.2 0-2.3-.5-3.1-1.3s-1.3-1.9-1.3-3.1.5-2.3 1.3-3.1 1.9-1.3 3.1-1.3 2.3.5 3.1 1.3 1.3 1.9 1.3 3.1c0 2.4-1.9 4.4-4.4 4.4zM118.8 32h-3.7l-7.9-12.1v12.1h-3V8h3.7l7.9 12.1V8h3v24z" />
             </svg>
             <h1 className="text-2xl md:text-3xl font-bold font-headline tracking-tight">
               Lunch Vote
