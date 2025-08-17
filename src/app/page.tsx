@@ -235,8 +235,8 @@ export default function Home() {
       </main>
        <footer className="py-6 mt-8 bg-secondary/50">
         <div className="container mx-auto text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} ABB. All rights reserved.</p>
-          <p>This is an internal tool for choosing Tuesday's lunch.</p>
+          <p>&copy; {new Date().getFullYear()} LARS OBERHOFER. All rights reserved.</p>
+          <p>This is an external tool for choosing Tuesday's lunch.</p>
         </div>
       </footer>
     </div>
