@@ -1,0 +1,68 @@
+// prisma/schema.prisma - Corrected version
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          String      @id
+  name        String      @unique
+  location    String
+  description String
+  votes       Vote[]
+  menuCache   MenuCache[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Vote {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekOf       DateTime
+  createdAt    DateTime   @default(now())
+  
+  @@unique([userId, weekOf])
+  @@index([weekOf])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  name      String?
+  sessionId String   @unique
+  votes     Vote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VotingSession {
+  id        String   @id @default(cuid())
+  weekOf    DateTime @unique
+  isActive  Boolean  @default(true)
+  winnerId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MenuCache {
+  id           String     @id @default(cuid())
+  restaurantId String
+  language     String     // 'en' or 'fi'
+  date         String     // YYYY-MM-DD format
+  rawMenu      String
+  parsedMenu   String
+  parsedMenuJson String? 
+  createdAt    DateTime   @default(now())
+  scrapedAt    DateTime   @default(now())
+  
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  @@unique([restaurantId, date, language], name: "restaurantId_date_language")
+}
