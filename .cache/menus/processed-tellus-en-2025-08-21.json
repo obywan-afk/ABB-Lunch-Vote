@@ -1,0 +1,9 @@
+{
+  "restaurantId": "tellus",
+  "restaurantName": "Tellus",
+  "date": "2025-08-21",
+  "language": "en",
+  "rawMenu": "Tomato soup with feta cheese (A, G, VL, VS) &lt;br&gt; () Rice (G, L, M, Veg) &lt;br&gt;Oat and beetroot balls (*, A, ILM, L, M, Veg) Hummus-flavored oatghurt (*, A, G, ILM, L, M, Veg, VS) &lt;br&gt; () &lt;br&gt;Taco Fried Chicken (A, G, L, M) Lime and chili yoghurt (A, G, ILM, L) Fruit rice (G, L, M, Veg) &lt;br&gt; () &lt;br&gt;Vanilla kissel (A, G, L) Marinated black currant (G, L, M, Veg) &lt;br&gt; () &lt;br&gt; () &lt;br&gt;",
+  "parsedMenu": "Tomato soup with feta cheese (A, G, VL, VS) &lt;br&gt; () Rice (G, L, M, Veg) &lt;br&gt;Oat and beetroot balls (*, A, ILM, L, M, Veg) Hummus-flavored oatghurt (*, A, G, ILM, L, M, Veg, VS) &lt;br&gt; () &lt;br&gt;Taco Fried Chicken (A, G, L, M) Lime and chili yoghurt (A, G, ILM, L) Fruit rice (G, L, M, Veg) &lt;br&gt; () &lt;br&gt;Vanilla kissel (A, G, L) Marinated black currant (G, L, M, Veg) &lt;br&gt; () &lt;br&gt; () &lt;br&gt;",
+  "processedAt": "2025-08-21T23:05:34.959Z"
+}

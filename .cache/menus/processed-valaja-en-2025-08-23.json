@@ -1,0 +1,9 @@
+{
+  "restaurantId": "valaja",
+  "restaurantName": "Valaja",
+  "date": "2025-08-23",
+  "language": "en",
+  "rawMenu": "[{\"name\": \"Pea and broad bean rissoles\"}, {\"name\": \"Ratatouille vegetables\"}, {\"name\": \"Aioli with basil\"}, {\"name\": \"Italian style meatball and pasta soup\"}, {\"name\": \"Kebab sauce\"}, {\"name\": \"Garlic seasoned yoghurt\"}, {\"name\": \"Rice\"}, {\"name\": \"Banana and peppermint milkshake\"}, {\"name\": \"Sweet chili and smoked salmon salad\"}]",
+  "parsedMenu": "Pea and broad bean rissoles Vegetarian\nRatatouille vegetables Vegan\nAioli with basil Vegetarian\nItalian style meatball and pasta soup Meat\nKebab sauce\nGarlic seasoned yoghurt Vegetarian\nRice Vegan\nBanana and peppermint milkshake\nSweet chili and smoked salmon salad Meat",
+  "processedAt": "2025-08-23T15:10:46.313Z"
+}

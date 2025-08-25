@@ -1,0 +1,9 @@
+{
+  "restaurantId": "por",
+  "restaurantName": "Por",
+  "date": "2025-08-21",
+  "language": "en",
+  "rawMenu": "=\"#ffffff\"> img:is([sizes=\"auto\" i], [sizes^=\"auto,\" i]) { contain-intrinsic-size: 3000px 1500px } Menu - Pitäjänmäen Osuusruokala <meta property=\"og:t",
+  "parsedMenu": "=\"#ffffff\"> img:is([sizes=\"auto\" i], [sizes^=\"auto,\" i]) { contain-intrinsic-size: 3000px 1500px } Menu - Pitäjänmäen Osuusruokala <meta property=\"og:t",
+  "processedAt": "2025-08-21T23:05:35.224Z"
+}

@@ -1,0 +1,9 @@
+{
+  "restaurantId": "por",
+  "restaurantName": "Por",
+  "date": "2025-08-23",
+  "language": "en",
+  "rawMenu": "[{\"name\": \"Sweet potato soup\"}, {\"name\": \"Chicken and vegetable stir-fry with rice noodles\"}, {\"name\": \"Mushroom and spinach lasagna\"}, {\"name\": \"Side salad with vinaigrette\"}, {\"name\": \"Blueberry pie with vanilla sauce\"}]",
+  "parsedMenu": "Sweet potato soup\nChicken and vegetable stir-fry with rice noodles\nMushroom and spinach lasagna\nSide salad with vinaigrette\nBlueberry pie with vanilla sauce",
+  "processedAt": "2025-08-23T15:10:44.063Z"
+}

@@ -1,0 +1,9 @@
+{
+  "restaurantId": "ravintola-valimo",
+  "restaurantName": "Ravintola Valimo",
+  "date": "2025-08-23",
+  "language": "en",
+  "rawMenu": "Smoked reindeer soup with Koskenlaskija cheese. Lightly smoked salmon with butter-white wine sauce, mashed potatoes. Chicken breast fillets with spicy basil-coconut sauce, herb rice. Oven-baked sausages spiced with chili and gouda cheese. Cauliflower-broccoli gratin with cheddar cheese. Wokked fresh vegetables with tofu. Domino quark with berries.",
+  "parsedMenu": "Smoked reindeer soup with Koskenlaskija cheese. Meat\nLightly smoked salmon with butter-white wine sauce, mashed potatoes. Meat\nChicken breast fillets with spicy basil-coconut sauce, herb rice. Meat\nOven-baked sausages spiced with chili and gouda cheese. Meat\nCauliflower-broccoli gratin with cheddar cheese. Vegetarian\nWokked fresh vegetables with tofu. Vegan\nDomino quark with berries.",
+  "processedAt": "2025-08-23T15:10:48.917Z"
+}

@@ -3,56 +3,96 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Restaurant } from '@/lib/types';
-import { initialRestaurants } from '@/lib/restaurant-data';
-import { parseRestaurantMenu } from '@/ai/flows/parse-restaurant-menu';
 import { RestaurantCard, RestaurantCardSkeleton } from '@/components/restaurant-card';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useVoting, useUserVote } from '@/hooks/useVoting';
+import { useVoters } from '@/hooks/useVoters';
+import { Button } from '@/components/ui/button';
 
 type Language = 'en' | 'fi';
 
-async function fetchTellusMenu(language: Language): Promise<string> {
-  try {
-    const response = await fetch(`/api/tellus?language=${language}`);
-    if (!response.ok) {
-      return `Could not fetch Tellus menu. Status: ${response.status}`;
-    }
-    const text = await response.text();
-    
-    // Basic XML parsing to find Tuesday's menu
-    if (typeof window !== 'undefined') {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(text, "text/xml");
-        const items = xmlDoc.getElementsByTagName('item');
-        for (let i = 0; i < items.length; i++) {
-          const title = items[i].getElementsByTagName('title')[0].textContent;
-          if (title?.toLowerCase().includes('tuesday') || title?.toLowerCase().includes('tiistai')) {
-            const description = items[i].getElementsByTagName('description')[0].textContent;
-            // The description is HTML, so we need to clean it up.
-            const descriptionElement = document.createElement('div');
-            descriptionElement.innerHTML = description || '';
-            return descriptionElement.innerText.trim() || `Menu for Tuesday not found in description. Language: ${language}`;
-          }
-        }
-    }
-    return `Tuesday menu not found for Tellus. Language: ${language}`;
-  } catch (error) {
-    console.error("Error fetching Tellus menu:", error);
-    return "Error fetching Tellus menu.";
-  }
+type DevDay = '' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday'
+
+// Motion Design Team Logo Component
+function MotionDesignLogo() {
+  return (
+    <div className="flex items-center gap-4">
+      {/* Animated Logo */}
+      <div className="relative w-12 h-12">
+        {/* Outer rotating ring */}
+        <div className="absolute inset-0 border-2 border-white/30 rounded-full animate-spin" style={{ animationDuration: '8s' }}>
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-400 rounded-full"></div>
+          <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full"></div>
+          <div className="absolute top-1/2 -left-1 transform -translate-y-1/2 w-1.5 h-1.5 bg-pink-400 rounded-full"></div>
+        </div>
+        
+        {/* Inner pulsing circle */}
+        <div className="absolute inset-2 bg-white/20 rounded-full animate-pulse flex items-center justify-center">
+          <div className="w-4 h-4 bg-white rounded-full shadow-lg"></div>
+        </div>
+        
+        {/* Motion trails */}
+        <div className="absolute inset-1 border border-white/20 rounded-full animate-ping" style={{ animationDelay: '0.5s', animationDuration: '2s' }}></div>
+      </div>
+      
+      {/* Text Logo */}
+      <div className="flex flex-col">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/90 bg-clip-text">
+          Motion Lunch
+        </h1>
+        <span className="text-xs md:text-sm text-white/70 font-medium tracking-wider uppercase">
+          Design Team Voting
+        </span>
+      </div>
+    </div>
+  );
 }
 
-
 export default function Home() {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(initialRestaurants);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [votedRestaurantId, setVotedRestaurantId] = useState<string | null>(null);
-  const [isVotingOpen, setIsVotingOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   const { toast } = useToast();
   const router = useRouter();
+  const [aiLimited, setAiLimited] = useState(false);
+
+  // 👉 DEV: day override + fresh flag (persisted across reloads)
+  const dayOverride: DevDay = 'tuesday'
+  const fresh = false // ✅ turn fresh OFF so cache is used
+
+
+  // Backend hooks
+  const { restaurants: backendRestaurants, winner, loading: votingLoading, vote, removeVote, refetch } = useVoting();
+  const { hasVoted, votedRestaurantId, refreshVoteStatus } = useUserVote();
+  const { voters, refetchVoters } = useVoters(); // Add refetchVoters
+
+  const isVotingOpen = true; // Keep for testing
+
+  const handleRemoveVote = async () => {
+  const result = await removeVote();
+  if (result.success) {
+    await Promise.all([
+      refetch(),
+      refreshVoteStatus(),
+      refetchVoters() 
+    ]);
+    
+    toast({
+      title: "Vote Removed!",
+      description: "Your vote has been removed.",
+    });
+  } else {
+      toast({
+        title: "Failed to Remove Vote",
+        description: result.error || "Failed to remove vote.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     // Check for authentication
@@ -62,178 +102,235 @@ export default function Home() {
     }
   }, [router]);
 
-  useEffect(() => {
-    const checkVotingTime = () => {
-      const now = new Date();
-      const day = now.getDay();
-      const hour = now.getHours();
-      // Voting is open on Monday (1) and Tuesday (2) before noon (12:00)
-      const votingActive = day === 1 || (day === 2 && hour < 12);
-      setIsVotingOpen(votingActive);
-    };
-
-    checkVotingTime();
-    // Check every minute
-    const interval = setInterval(checkVotingTime, 60000); 
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const processMenus = async () => {
+  
+    useEffect(() => {
+    const fetchProcessedMenus = async () => {
       setIsLoading(true);
       try {
-        const restaurantsWithData = await Promise.all(
-          initialRestaurants.map(async (restaurant) => {
-            if (restaurant.id === 'tellus') {
-              const menu = await fetchTellusMenu(language);
-              if (language === 'en') {
-                return { ...restaurant, rawMenu: menu };
-              } else {
-                return { ...restaurant, rawMenuFi: menu };
-              }
-            }
-            return restaurant;
-          })
-        );
-        
-        const parsedRestaurants = await Promise.all(
-          restaurantsWithData.map(async (restaurant) => {
-            const menuToParse = language === 'en' ? restaurant.rawMenu : restaurant.rawMenuFi;
-            const parsedMenuKey = language === 'en' ? 'parsedMenu' : 'parsedMenuFi';
+        const params = new URLSearchParams({ language });
+        params.set('day', dayOverride);
+        if (fresh) params.set('fresh', 'true');
 
-            if (!menuToParse || menuToParse.trim() === '') {
-              return { ...restaurant, [parsedMenuKey]: "Menu not available." };
-            }
-            try {
-              const result = await parseRestaurantMenu({
-                restaurantName: restaurant.name,
-                menuText: menuToParse,
-              });
-              return {
-                ...restaurant,
-                [parsedMenuKey]: result.parsedMenu,
-              };
-            } catch (error) {
-               console.error(`Failed to parse menu for ${restaurant.name}:`, error);
-               // Fallback to raw menu if parsing fails for a specific restaurant
-               return { ...restaurant, [parsedMenuKey]: menuToParse };
-            }
-          })
-        );
-        setRestaurants(parsedRestaurants);
+        const response = await fetch(`/api/menus?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const processedRestaurants: Restaurant[] = data.restaurants.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            location: r.location,
+            description: r.description,
+            rawMenu: r.rawMenu,
+            parsedMenu: r.parsedMenu,
+            votes: 0,
+            url: r.url || undefined,
+            status: r.status,
+            rawSnippet: r.rawSnippet,
+          }));
+          setRestaurants(processedRestaurants);
+          setAiLimited(Boolean(data.meta?.aiLimited));
+        } else {
+          throw new Error(data.error || 'Failed to fetch processed menus');
+        }
       } catch (error) {
-        console.error("Failed to process menus:", error);
+        console.error('Failed to fetch processed menus:', error);
         toast({
-          title: "Error",
-          description: "Could not load all menus. Displaying available data.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Could not load menus. Please try again.',
+          variant: 'destructive',
         });
-        // Fallback to initial data with raw menus if the whole process fails
-        setRestaurants(initialRestaurants.map(r => ({...r, parsedMenu: r.rawMenu || "Menu not available.", parsedMenuFi: r.rawMenuFi || "Menu not available."})));
+        setRestaurants([]);
       }
       setIsLoading(false);
     };
 
-    processMenus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
-  
-  const handleVote = (id: string) => {
-    if (!isVotingOpen || votedRestaurantId) return;
+    fetchProcessedMenus();
+  }, [language, toast]); // dayOverride/fresh are constants now
 
-    setRestaurants((prevRestaurants) =>
-      prevRestaurants.map((r) => (r.id === id ? { ...r, votes: r.votes + 1 } : r))
-    );
-    setVotedRestaurantId(id);
+
+
+
+ const handleVote = async (id: string) => {
+  if (!isVotingOpen) return;
+
+  const result = await vote(id);
+  if (result.success) {
+    await Promise.all([
+      refetch(),
+      refreshVoteStatus(),
+      refetchVoters() // Add this line
+    ]);
+    
     const restaurantName = restaurants.find(r => r.id === id)?.name;
     toast({
       title: "Vote Cast!",
       description: `You voted for ${restaurantName}.`,
     });
+  } else {
+      toast({
+        title: "Vote Failed",
+        description: result.error || "Failed to cast vote.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const winningRestaurant = useMemo(() => {
-     if (isLoading) return null;
-     // Sort by votes, then by name to have a stable sort for ties
-     const sortedByVotes = [...restaurants].sort((a, b) => {
-        if (b.votes !== a.votes) {
-            return b.votes - a.votes;
-        }
-        return a.name.localeCompare(b.name);
-     });
+  // Merge frontend restaurants (with menus) with backend restaurants (with votes)
+  const mergedRestaurants = useMemo(() => {
+    if (!backendRestaurants.length) return restaurants;
+    
+    return restaurants.map(restaurant => {
+      const backendRestaurant = backendRestaurants.find((br: any) => br.name === restaurant.name);
+      return {
+        ...restaurant,
+        votes: backendRestaurant?.votes || 0,
+        id: backendRestaurant?.id || restaurant.id
+      };
+    });
+  }, [restaurants, backendRestaurants]);
 
-     const leader = sortedByVotes[0];
-     // A winner is only declared if they have at least 5 votes.
-     if (leader && leader.votes >= 5) {
-       return leader;
-     }
-     return null;
-  }, [restaurants, isLoading]);
-
-  const votingStatusText = useMemo(() => {
-    if (isVotingOpen) {
-      const now = new Date();
-      if (now.getDay() === 1) return "Voting is open until Tuesday at noon.";
-      if (now.getDay() === 2) return "Voting closes today at noon.";
-    }
-    return "Voting is currently closed.";
-  }, [isVotingOpen]);
+  const votingStatusText = useMemo(
+    () => (isVotingOpen ? "Voting is open." : "Voting is currently closed."),
+    [isVotingOpen]
+  );
 
   const handleLanguageChange = (value: string) => {
     setLanguage(value as Language);
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground py-6 shadow-md sticky top-0 z-20">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center gap-4 mb-4 md:mb-0">
-             <svg role="img" aria-label="ABB Logo" width="120" height="40" viewBox="0 0 120 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14.4 27.2h-3.2L8 16.8h.2l3.2 10.4zM2.3 8v24h18.4V8H2.3zm15.4 21H5.5V11h12.2v18zM31.1 8v24h18.4V8H31.1zm15.4 21h-12V11h12v18zM38.8 27.2h-3.2L32.4 16.8h.2l3.2 10.4zM55.9 8v24h18.4V8H55.9zm15.4 21H59.1V11h12.2v18zM63.6 27.2h-3.2L57.2 16.8h.2l3.2 10.4z" />
-              <path d="M96.7 13.9c-1.3-1.3-3.1-2.1-5.1-2.1s-3.8.8-5.1 2.1-2.1 3.1-2.1 5.1 2 5.1 5.1 5.1 3.8-.8 5.1-2.1c1.3-1.4 2.1-3.2 2.1-5.1-.1-2-.9-3.7-2.1-5.1zm-8.4 8.4c-1.2 0-2.3-.5-3.1-1.3s-1.3-1.9-1.3-3.1.5-2.3 1.3-3.1 1.9-1.3 3.1-1.3 2.3.5 3.1 1.3 1.3 1.9 1.3 3.1c0 2.4-1.9 4.4-4.4 4.4zM118.8 32h-3.7l-7.9-12.1v12.1h-3V8h3.7l7.9 12.1V8h3v24z" />
-            </svg>
-            <h1 className="text-2xl md:text-3xl font-bold font-headline tracking-tight">
-              Lunch Vote
-            </h1>
-          </div>
-           <div className="flex flex-col items-center gap-2">
-            <div className="text-center md:text-right">
-              <h2 className="text-lg font-semibold">Tuesday Lunch Poll</h2>
-              <Badge variant={isVotingOpen ? "secondary" : "destructive"} className={cn(isVotingOpen ? 'bg-green-100 text-green-900' : '', 'transition-colors')}>
-                  {votingStatusText}
-              </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <header className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white shadow-2xl overflow-hidden sticky top-0 z-20">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full animate-pulse" style={{ animationDuration: '4s' }}></div>
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-orange-500/10 to-pink-500/10 rounded-full animate-pulse" style={{ animationDelay: '2s', animationDuration: '6s' }}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-500/5 to-yellow-500/5 rounded-full animate-spin" style={{ animationDuration: '20s' }}></div>
+        </div>
+        
+        {/* Glassmorphism overlay */}
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+        
+        {/* Content */}
+        <div className="relative container mx-auto px-4 py-6">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+            <MotionDesignLogo />
+            
+            <div className="flex flex-col items-center lg:items-end gap-4">
+              <div className="text-center lg:text-right">
+                <h2 className="text-xl md:text-2xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                  Tuesday Team Lunch
+                </h2>
+                <div className="flex items-center gap-2 justify-center lg:justify-end">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full animate-pulse",
+                    isVotingOpen ? "bg-green-400" : "bg-red-400"
+                  )}></div>
+                  <Badge 
+                    variant={isVotingOpen ? "secondary" : "destructive"} 
+                    className={cn(
+                      "transition-all duration-300 font-medium",
+                      isVotingOpen 
+                        ? 'bg-green-500/20 text-green-300 border-green-400/30 hover:bg-green-500/30' 
+                        : 'bg-red-500/20 text-red-300 border-red-400/30'
+                    )}
+                  >
+                    {votingStatusText}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <Tabs 
+                  value={language} 
+                  onValueChange={handleLanguageChange} 
+                  className="w-[120px]"
+                >
+                  <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20 backdrop-blur-md">
+                    <TabsTrigger 
+                      value="en" 
+                      className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-white/80 hover:text-white transition-all duration-200 font-medium"
+                    >
+                      EN
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="fi" 
+                      className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-white/80 hover:text-white transition-all duration-200 font-medium"
+                    >
+                      FI
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-1000"></div>
+              </div>
             </div>
-            <Tabs defaultValue="en" onValueChange={handleLanguageChange} className="w-[100px]">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="en">EN</TabsTrigger>
-                <TabsTrigger value="fi">FI</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
       </header>
+{aiLimited && (
+  <div className="mb-6 p-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-800">
+    AI parsing is rate-limited today. We still scraped sources and will parse again automatically later.
+  </div>
+)}
 
       <main className="container mx-auto p-4 md:p-8">
+        {voters.count > 0 && (
+          <div className="mb-6 p-4 bg-white/50 rounded-lg border border-gray-200">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="text-lg font-semibold">
+                {voters.count} {voters.count === 1 ? 'person has' : 'people have'} voted:
+              </h3>
+              {hasVoted && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRemoveVote}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  Remove My Vote
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {voters.names.map((name, index) => (
+                <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
+                  {name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-          {isLoading
-            ? Array.from({ length: 6 }).map((_, index) => <RestaurantCardSkeleton key={index} />)
-            : restaurants.map((restaurant) => {
-                const menuToDisplay = language === 'en' ? restaurant.parsedMenu : restaurant.parsedMenuFi;
-                return (
-                  <RestaurantCard
-                    key={restaurant.id}
-                    restaurant={{...restaurant, parsedMenu: menuToDisplay}}
-                    onVote={() => handleVote(restaurant.id)}
-                    userHasVoted={!!votedRestaurantId}
-                    hasVotedForThis={votedRestaurantId === restaurant.id}
-                    isWinner={winningRestaurant?.id === restaurant.id}
-                    isVotingOpen={isVotingOpen}
-                  />
-                )
-            })}
-        </div>
-      </main>
-       <footer className="py-6 mt-8 bg-secondary/50">
+  {isLoading || votingLoading ? (
+    Array.from({ length: 6 }).map((_, i) => <RestaurantCardSkeleton key={i} />)
+  ) : mergedRestaurants.length === 0 ? (
+    <div className="col-span-full rounded-lg border bg-white p-8 text-center text-muted-foreground">
+      No restaurants found. If this seems wrong, check database connection and permissions.
+    </div>
+  ) : (
+    mergedRestaurants.map((restaurant) => {
+      const menuToDisplay = restaurant.parsedMenu; // raw fallback happens inside RestaurantCard
+      return (
+        <RestaurantCard
+          key={restaurant.id}
+          restaurant={{ ...restaurant, parsedMenu: menuToDisplay }}
+          onVote={() => handleVote(restaurant.id)}
+          userHasVoted={hasVoted}
+          hasVotedForThis={votedRestaurantId === restaurant.id}
+          isWinner={winner?.id === restaurant.id}
+          isVotingOpen={isVotingOpen}
+        />
+      );
+    })
+  )}
+</div>
+</main>
+      
+      <footer className="py-6 mt-8 bg-secondary/50">
         <div className="container mx-auto text-center text-muted-foreground text-sm">
           <p>&copy; {new Date().getFullYear()} LARS OBERHOFER. All rights reserved.</p>
           <p>This is an external tool for choosing Tuesday's lunch.</p>

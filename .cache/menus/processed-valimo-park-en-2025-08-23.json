@@ -1,0 +1,9 @@
+{
+  "restaurantId": "valimo-park",
+  "restaurantName": "Valimo Park",
+  "date": "2025-08-23",
+  "language": "en",
+  "rawMenu": "FROM THE GRILL: Smoked salmon, herb potatoes, egg sauce OR Beetroot patties or fried tofu, herb potatoes and sour cream sauce OR Hunter's sandwich; minced beef steak, mushroom sauce, gratinated cheese, french fries. Week's salad option: Chicken and blue cheese salad OR Baked potato with shrimp filling and fresh salad. Dessert: DIY Soft ice cream.",
+  "parsedMenu": "Smoked salmon, herb potatoes, egg sauce Meat\nBeetroot patties, herb potatoes and sour cream sauce Vegetarian\nFried tofu, herb potatoes and sour cream sauce Vegan\nHunter's sandwich; minced beef steak, mushroom sauce, gratinated cheese, french fries Meat\nChicken and blue cheese salad Meat\nBaked potato with shrimp filling and fresh salad Meat\nDIY Soft ice cream",
+  "processedAt": "2025-08-23T15:10:45.230Z"
+}

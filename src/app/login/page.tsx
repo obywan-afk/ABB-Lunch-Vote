@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -16,6 +17,16 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!name.trim()) {
+      toast({
+        title: 'Name Required',
+        description: 'Please enter your name to continue.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/login', {
@@ -28,6 +39,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         sessionStorage.setItem('abb-lunch-vote-auth', 'true');
+        sessionStorage.setItem('abb-lunch-vote-user', name.trim());
         router.push('/');
       } else {
         toast({
@@ -59,6 +71,14 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Input
+              id="name"
+              type="text"
+              placeholder="Your Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
             <Input
               id="password"
               type="password"
