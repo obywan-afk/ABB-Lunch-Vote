@@ -23,17 +23,20 @@ export async function GET(request: NextRequest) {
 
   // Auto-cleanup: Run once per day on first request
   const today = todayKeyEuropeHelsinki();
-  if (lastCleanupDate !== today) {
-    try {
-      const result = await prisma.menuCache.deleteMany({
-        where: { date: { not: today } }
-      });
-      console.log(`🧹 Auto-cleanup: Deleted ${result.count} expired cache entries`);
-      lastCleanupDate = today;
-    } catch (error) {
-      console.error('❌ Auto-cleanup failed:', error);
-    }
+ // Replace the existing auto-cleanup section with:
+if (lastCleanupDate !== today) {
+  try {
+    // Call your full cleanup logic
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
+      method: 'POST'
+    });
+    const result = await response.json();
+    console.log('Auto-cleanup result:', result);
+    lastCleanupDate = today;
+  } catch (error) {
+    console.error('Auto-cleanup failed:', error);
   }
+}
 
   try {
     const dbRestaurants = await prisma.restaurant.findMany({

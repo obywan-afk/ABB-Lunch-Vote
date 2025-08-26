@@ -1,0 +1,830 @@
+{
+  "timestamp": "2025-08-26T17:07:17.656Z",
+  "restaurants": [
+    {
+      "id": "tellus",
+      "name": "Tellus",
+      "location": "ABB Campus",
+      "description": "Compass Group (RSS feed)",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": [
+        {
+          "id": "cmes6cog80002l204ezrhpyh4",
+          "restaurantId": "tellus",
+          "userId": "cmes6co5p0000l20464zywyrf",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T06:38:04.998Z",
+          "user": {
+            "id": "cmes6co5p0000l20464zywyrf",
+            "email": null,
+            "name": "Lars",
+            "sessionId": "session_Lars_1756190284620",
+            "createdAt": "2025-08-26T06:38:04.621Z",
+            "updatedAt": "2025-08-26T06:38:04.621Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "por",
+      "name": "Pitäjänmäen Osuusruokala (POR)",
+      "location": "Pitäjänmäki",
+      "description": "POR kitchen (WordPress / HTML)",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": [
+        {
+          "id": "cmes904f8000ejv04kah17xuj",
+          "restaurantId": "por",
+          "userId": "cmes9044u000cjv04mldws61g",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:52:18.021Z",
+          "user": {
+            "id": "cmes9044u000cjv04mldws61g",
+            "email": null,
+            "name": "virve",
+            "sessionId": "session_virve_1756194737646",
+            "createdAt": "2025-08-26T07:52:17.647Z",
+            "updatedAt": "2025-08-26T07:52:17.647Z"
+          }
+        },
+        {
+          "id": "cmes90ywq000ejs04qj0am1bz",
+          "restaurantId": "por",
+          "userId": "cmes90ymf000cjs04vj74w5wp",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:52:57.531Z",
+          "user": {
+            "id": "cmes90ymf000cjs04vj74w5wp",
+            "email": null,
+            "name": "Miika",
+            "sessionId": "session_Miika_1756194777158",
+            "createdAt": "2025-08-26T07:52:57.159Z",
+            "updatedAt": "2025-08-26T07:52:57.159Z"
+          }
+        },
+        {
+          "id": "cmes939yx000hjs04l85pzqg2",
+          "restaurantId": "por",
+          "userId": "cmes939tq000fjs043pij1ad2",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:54:45.178Z",
+          "user": {
+            "id": "cmes939tq000fjs043pij1ad2",
+            "email": null,
+            "name": "Katri",
+            "sessionId": "session_Katri_1756194884989",
+            "createdAt": "2025-08-26T07:54:44.990Z",
+            "updatedAt": "2025-08-26T07:54:44.990Z"
+          }
+        },
+        {
+          "id": "cmes94ec9000gk004ykashzhe",
+          "restaurantId": "por",
+          "userId": "cmes91pk5000ijv04jwpj8n1a",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:55:37.497Z",
+          "user": {
+            "id": "cmes91pk5000ijv04jwpj8n1a",
+            "email": null,
+            "name": "Prash",
+            "sessionId": "session_Prash_1756194812068",
+            "createdAt": "2025-08-26T07:53:32.069Z",
+            "updatedAt": "2025-08-26T07:53:32.069Z"
+          }
+        },
+        {
+          "id": "cmes96ea0000njs04xcaffcrc",
+          "restaurantId": "por",
+          "userId": "cmes96e4r000ljs044uc9zkue",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:57:10.728Z",
+          "user": {
+            "id": "cmes96e4r000ljs044uc9zkue",
+            "email": null,
+            "name": "Lin",
+            "sessionId": "session_Lin_1756195030538",
+            "createdAt": "2025-08-26T07:57:10.539Z",
+            "updatedAt": "2025-08-26T07:57:10.539Z"
+          }
+        },
+        {
+          "id": "cmes98js9000tjs04upxrz2bw",
+          "restaurantId": "por",
+          "userId": "cmes98j9n000rjs045lqredcr",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:58:51.178Z",
+          "user": {
+            "id": "cmes98j9n000rjs045lqredcr",
+            "email": null,
+            "name": "Nicola",
+            "sessionId": "session_Nicola_1756195130506",
+            "createdAt": "2025-08-26T07:58:50.507Z",
+            "updatedAt": "2025-08-26T07:58:50.507Z"
+          }
+        },
+        {
+          "id": "cmesasxgh000njv04jkget4ra",
+          "restaurantId": "por",
+          "userId": "cmesasx5x000ljv04pfk3k5gw",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T08:42:41.634Z",
+          "user": {
+            "id": "cmesasx5x000ljv04pfk3k5gw",
+            "email": null,
+            "name": "ekin",
+            "sessionId": "session_ekin_1756197761252",
+            "createdAt": "2025-08-26T08:42:41.253Z",
+            "updatedAt": "2025-08-26T08:42:41.253Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "valimo-park",
+      "name": "Valimo Park",
+      "location": "Valimo",
+      "description": "ISS / Flockler feed",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": [
+        {
+          "id": "cmes8ztrc000el104aueb9jxv",
+          "restaurantId": "valimo-park",
+          "userId": "cmes8ztgr000cl1042859ylv5",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:52:04.201Z",
+          "user": {
+            "id": "cmes8ztgr000cl1042859ylv5",
+            "email": null,
+            "name": "Nita",
+            "sessionId": "session_Nita_1756194723818",
+            "createdAt": "2025-08-26T07:52:03.819Z",
+            "updatedAt": "2025-08-26T07:52:03.819Z"
+          }
+        },
+        {
+          "id": "cmes907yn000ek004uywlr926",
+          "restaurantId": "valimo-park",
+          "userId": "cmes907o2000ck0041ntv7iax",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:52:22.607Z",
+          "user": {
+            "id": "cmes907o2000ck0041ntv7iax",
+            "email": null,
+            "name": "Camilla Westerback",
+            "sessionId": "session_Camilla Westerback_1756194742225",
+            "createdAt": "2025-08-26T07:52:22.226Z",
+            "updatedAt": "2025-08-26T07:52:22.226Z"
+          }
+        },
+        {
+          "id": "cmes940xe000kjs041osvov4f",
+          "restaurantId": "valimo-park",
+          "userId": "cmes940io000ijs04lvw4sgdu",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:55:20.114Z",
+          "user": {
+            "id": "cmes940io000ijs04lvw4sgdu",
+            "email": null,
+            "name": "Aybars",
+            "sessionId": "session_Aybars_1756194919584",
+            "createdAt": "2025-08-26T07:55:19.585Z",
+            "updatedAt": "2025-08-26T07:55:19.585Z"
+          }
+        },
+        {
+          "id": "cmes9761v000qjs04pw7oy2uu",
+          "restaurantId": "valimo-park",
+          "userId": "cmes975wm000ojs048ka4zm7f",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:57:46.724Z",
+          "user": {
+            "id": "cmes975wm000ojs048ka4zm7f",
+            "email": null,
+            "name": "Margarida",
+            "sessionId": "session_Margarida_1756195066534",
+            "createdAt": "2025-08-26T07:57:46.535Z",
+            "updatedAt": "2025-08-26T07:57:46.535Z"
+          }
+        },
+        {
+          "id": "cmes9ad6m000wjs04bxs3imnm",
+          "restaurantId": "valimo-park",
+          "userId": "cmes9acw5000ujs0424w0y7dd",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T08:00:15.934Z",
+          "user": {
+            "id": "cmes9acw5000ujs0424w0y7dd",
+            "email": null,
+            "name": "VY",
+            "sessionId": "session_VY_1756195215556",
+            "createdAt": "2025-08-26T08:00:15.557Z",
+            "updatedAt": "2025-08-26T08:00:15.557Z"
+          }
+        },
+        {
+          "id": "cmes9dxmg000jk004wjpa2ijn",
+          "restaurantId": "valimo-park",
+          "userId": "cmes9dxbz000hk004tcq2a20l",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T08:03:02.392Z",
+          "user": {
+            "id": "cmes9dxbz000hk004tcq2a20l",
+            "email": null,
+            "name": "Namita Savla",
+            "sessionId": "session_Namita Savla_1756195382015",
+            "createdAt": "2025-08-26T08:03:02.016Z",
+            "updatedAt": "2025-08-26T08:03:02.016Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "valaja",
+      "name": "Valaja",
+      "location": "Pitäjänmäki",
+      "description": "Sodexo weekly_json/190",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": [
+        {
+          "id": "cmes90dac000hjv04pfcz19q3",
+          "restaurantId": "valaja",
+          "userId": "cmes90czz000fjv04o8lwshh2",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T07:52:29.508Z",
+          "user": {
+            "id": "cmes90czz000fjv04o8lwshh2",
+            "email": null,
+            "name": "Jandi",
+            "sessionId": "session_Jandi_1756194749135",
+            "createdAt": "2025-08-26T07:52:29.136Z",
+            "updatedAt": "2025-08-26T07:52:29.136Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "factory",
+      "name": "Factory Pitäjänmäki",
+      "location": "Pitäjänmäki",
+      "description": "AI extractor on Factory site",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": [
+        {
+          "id": "cmes9p5sb0002jo04czsr49yr",
+          "restaurantId": "factory",
+          "userId": "cmes9p5hv0000jo04fqfy4uzg",
+          "weekOf": "2025-08-25T00:00:00.000Z",
+          "createdAt": "2025-08-26T08:11:46.185Z",
+          "user": {
+            "id": "cmes9p5hv0000jo04fqfy4uzg",
+            "email": null,
+            "name": "Juha",
+            "sessionId": "session_Juha_1756195905810",
+            "createdAt": "2025-08-26T08:11:45.812Z",
+            "updatedAt": "2025-08-26T08:11:45.812Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ravintola-valimo",
+      "name": "Ravintola Valimo",
+      "location": "Pitäjänmäki",
+      "description": "AI extractor on Valimo site",
+      "createdAt": "2025-08-25T23:05:34.805Z",
+      "updatedAt": "2025-08-25T23:05:34.805Z",
+      "votes": []
+    }
+  ],
+  "users": [
+    {
+      "id": "cmerqynyu000cif04t788o5t4",
+      "email": null,
+      "name": "sterre",
+      "sessionId": "session_sterre_1756164436949",
+      "createdAt": "2025-08-25T23:27:16.950Z",
+      "updatedAt": "2025-08-25T23:27:16.950Z"
+    },
+    {
+      "id": "cmerr1sh6000hif04hixpi3n1",
+      "email": null,
+      "name": "lars",
+      "sessionId": "session_lars_1756164582762",
+      "createdAt": "2025-08-25T23:29:42.763Z",
+      "updatedAt": "2025-08-25T23:29:42.763Z"
+    },
+    {
+      "id": "cmes6co5p0000l20464zywyrf",
+      "email": null,
+      "name": "Lars",
+      "sessionId": "session_Lars_1756190284620",
+      "createdAt": "2025-08-26T06:38:04.621Z",
+      "updatedAt": "2025-08-26T06:38:04.621Z"
+    },
+    {
+      "id": "cmes8ztgr000cl1042859ylv5",
+      "email": null,
+      "name": "Nita",
+      "sessionId": "session_Nita_1756194723818",
+      "createdAt": "2025-08-26T07:52:03.819Z",
+      "updatedAt": "2025-08-26T07:52:03.819Z"
+    },
+    {
+      "id": "cmes9044u000cjv04mldws61g",
+      "email": null,
+      "name": "virve",
+      "sessionId": "session_virve_1756194737646",
+      "createdAt": "2025-08-26T07:52:17.647Z",
+      "updatedAt": "2025-08-26T07:52:17.647Z"
+    },
+    {
+      "id": "cmes907o2000ck0041ntv7iax",
+      "email": null,
+      "name": "Camilla Westerback",
+      "sessionId": "session_Camilla Westerback_1756194742225",
+      "createdAt": "2025-08-26T07:52:22.226Z",
+      "updatedAt": "2025-08-26T07:52:22.226Z"
+    },
+    {
+      "id": "cmes90czz000fjv04o8lwshh2",
+      "email": null,
+      "name": "Jandi",
+      "sessionId": "session_Jandi_1756194749135",
+      "createdAt": "2025-08-26T07:52:29.136Z",
+      "updatedAt": "2025-08-26T07:52:29.136Z"
+    },
+    {
+      "id": "cmes90ymf000cjs04vj74w5wp",
+      "email": null,
+      "name": "Miika",
+      "sessionId": "session_Miika_1756194777158",
+      "createdAt": "2025-08-26T07:52:57.159Z",
+      "updatedAt": "2025-08-26T07:52:57.159Z"
+    },
+    {
+      "id": "cmes91pk5000ijv04jwpj8n1a",
+      "email": null,
+      "name": "Prash",
+      "sessionId": "session_Prash_1756194812068",
+      "createdAt": "2025-08-26T07:53:32.069Z",
+      "updatedAt": "2025-08-26T07:53:32.069Z"
+    },
+    {
+      "id": "cmes939tq000fjs043pij1ad2",
+      "email": null,
+      "name": "Katri",
+      "sessionId": "session_Katri_1756194884989",
+      "createdAt": "2025-08-26T07:54:44.990Z",
+      "updatedAt": "2025-08-26T07:54:44.990Z"
+    },
+    {
+      "id": "cmes940io000ijs04lvw4sgdu",
+      "email": null,
+      "name": "Aybars",
+      "sessionId": "session_Aybars_1756194919584",
+      "createdAt": "2025-08-26T07:55:19.585Z",
+      "updatedAt": "2025-08-26T07:55:19.585Z"
+    },
+    {
+      "id": "cmes96e4r000ljs044uc9zkue",
+      "email": null,
+      "name": "Lin",
+      "sessionId": "session_Lin_1756195030538",
+      "createdAt": "2025-08-26T07:57:10.539Z",
+      "updatedAt": "2025-08-26T07:57:10.539Z"
+    },
+    {
+      "id": "cmes975wm000ojs048ka4zm7f",
+      "email": null,
+      "name": "Margarida",
+      "sessionId": "session_Margarida_1756195066534",
+      "createdAt": "2025-08-26T07:57:46.535Z",
+      "updatedAt": "2025-08-26T07:57:46.535Z"
+    },
+    {
+      "id": "cmes98j9n000rjs045lqredcr",
+      "email": null,
+      "name": "Nicola",
+      "sessionId": "session_Nicola_1756195130506",
+      "createdAt": "2025-08-26T07:58:50.507Z",
+      "updatedAt": "2025-08-26T07:58:50.507Z"
+    },
+    {
+      "id": "cmes9acw5000ujs0424w0y7dd",
+      "email": null,
+      "name": "VY",
+      "sessionId": "session_VY_1756195215556",
+      "createdAt": "2025-08-26T08:00:15.557Z",
+      "updatedAt": "2025-08-26T08:00:15.557Z"
+    },
+    {
+      "id": "cmes9dxbz000hk004tcq2a20l",
+      "email": null,
+      "name": "Namita Savla",
+      "sessionId": "session_Namita Savla_1756195382015",
+      "createdAt": "2025-08-26T08:03:02.016Z",
+      "updatedAt": "2025-08-26T08:03:02.016Z"
+    },
+    {
+      "id": "cmes9p5hv0000jo04fqfy4uzg",
+      "email": null,
+      "name": "Juha",
+      "sessionId": "session_Juha_1756195905810",
+      "createdAt": "2025-08-26T08:11:45.812Z",
+      "updatedAt": "2025-08-26T08:11:45.812Z"
+    },
+    {
+      "id": "cmesasx5x000ljv04pfk3k5gw",
+      "email": null,
+      "name": "ekin",
+      "sessionId": "session_ekin_1756197761252",
+      "createdAt": "2025-08-26T08:42:41.253Z",
+      "updatedAt": "2025-08-26T08:42:41.253Z"
+    }
+  ],
+  "votes": [
+    {
+      "id": "cmes6cog80002l204ezrhpyh4",
+      "restaurantId": "tellus",
+      "userId": "cmes6co5p0000l20464zywyrf",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T06:38:04.998Z",
+      "restaurant": {
+        "id": "tellus",
+        "name": "Tellus",
+        "location": "ABB Campus",
+        "description": "Compass Group (RSS feed)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes6co5p0000l20464zywyrf",
+        "email": null,
+        "name": "Lars",
+        "sessionId": "session_Lars_1756190284620",
+        "createdAt": "2025-08-26T06:38:04.621Z",
+        "updatedAt": "2025-08-26T06:38:04.621Z"
+      }
+    },
+    {
+      "id": "cmes8ztrc000el104aueb9jxv",
+      "restaurantId": "valimo-park",
+      "userId": "cmes8ztgr000cl1042859ylv5",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:52:04.201Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes8ztgr000cl1042859ylv5",
+        "email": null,
+        "name": "Nita",
+        "sessionId": "session_Nita_1756194723818",
+        "createdAt": "2025-08-26T07:52:03.819Z",
+        "updatedAt": "2025-08-26T07:52:03.819Z"
+      }
+    },
+    {
+      "id": "cmes904f8000ejv04kah17xuj",
+      "restaurantId": "por",
+      "userId": "cmes9044u000cjv04mldws61g",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:52:18.021Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes9044u000cjv04mldws61g",
+        "email": null,
+        "name": "virve",
+        "sessionId": "session_virve_1756194737646",
+        "createdAt": "2025-08-26T07:52:17.647Z",
+        "updatedAt": "2025-08-26T07:52:17.647Z"
+      }
+    },
+    {
+      "id": "cmes907yn000ek004uywlr926",
+      "restaurantId": "valimo-park",
+      "userId": "cmes907o2000ck0041ntv7iax",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:52:22.607Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes907o2000ck0041ntv7iax",
+        "email": null,
+        "name": "Camilla Westerback",
+        "sessionId": "session_Camilla Westerback_1756194742225",
+        "createdAt": "2025-08-26T07:52:22.226Z",
+        "updatedAt": "2025-08-26T07:52:22.226Z"
+      }
+    },
+    {
+      "id": "cmes90dac000hjv04pfcz19q3",
+      "restaurantId": "valaja",
+      "userId": "cmes90czz000fjv04o8lwshh2",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:52:29.508Z",
+      "restaurant": {
+        "id": "valaja",
+        "name": "Valaja",
+        "location": "Pitäjänmäki",
+        "description": "Sodexo weekly_json/190",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes90czz000fjv04o8lwshh2",
+        "email": null,
+        "name": "Jandi",
+        "sessionId": "session_Jandi_1756194749135",
+        "createdAt": "2025-08-26T07:52:29.136Z",
+        "updatedAt": "2025-08-26T07:52:29.136Z"
+      }
+    },
+    {
+      "id": "cmes90ywq000ejs04qj0am1bz",
+      "restaurantId": "por",
+      "userId": "cmes90ymf000cjs04vj74w5wp",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:52:57.531Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes90ymf000cjs04vj74w5wp",
+        "email": null,
+        "name": "Miika",
+        "sessionId": "session_Miika_1756194777158",
+        "createdAt": "2025-08-26T07:52:57.159Z",
+        "updatedAt": "2025-08-26T07:52:57.159Z"
+      }
+    },
+    {
+      "id": "cmes939yx000hjs04l85pzqg2",
+      "restaurantId": "por",
+      "userId": "cmes939tq000fjs043pij1ad2",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:54:45.178Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes939tq000fjs043pij1ad2",
+        "email": null,
+        "name": "Katri",
+        "sessionId": "session_Katri_1756194884989",
+        "createdAt": "2025-08-26T07:54:44.990Z",
+        "updatedAt": "2025-08-26T07:54:44.990Z"
+      }
+    },
+    {
+      "id": "cmes940xe000kjs041osvov4f",
+      "restaurantId": "valimo-park",
+      "userId": "cmes940io000ijs04lvw4sgdu",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:55:20.114Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes940io000ijs04lvw4sgdu",
+        "email": null,
+        "name": "Aybars",
+        "sessionId": "session_Aybars_1756194919584",
+        "createdAt": "2025-08-26T07:55:19.585Z",
+        "updatedAt": "2025-08-26T07:55:19.585Z"
+      }
+    },
+    {
+      "id": "cmes94ec9000gk004ykashzhe",
+      "restaurantId": "por",
+      "userId": "cmes91pk5000ijv04jwpj8n1a",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:55:37.497Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes91pk5000ijv04jwpj8n1a",
+        "email": null,
+        "name": "Prash",
+        "sessionId": "session_Prash_1756194812068",
+        "createdAt": "2025-08-26T07:53:32.069Z",
+        "updatedAt": "2025-08-26T07:53:32.069Z"
+      }
+    },
+    {
+      "id": "cmes96ea0000njs04xcaffcrc",
+      "restaurantId": "por",
+      "userId": "cmes96e4r000ljs044uc9zkue",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:57:10.728Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes96e4r000ljs044uc9zkue",
+        "email": null,
+        "name": "Lin",
+        "sessionId": "session_Lin_1756195030538",
+        "createdAt": "2025-08-26T07:57:10.539Z",
+        "updatedAt": "2025-08-26T07:57:10.539Z"
+      }
+    },
+    {
+      "id": "cmes9761v000qjs04pw7oy2uu",
+      "restaurantId": "valimo-park",
+      "userId": "cmes975wm000ojs048ka4zm7f",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:57:46.724Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes975wm000ojs048ka4zm7f",
+        "email": null,
+        "name": "Margarida",
+        "sessionId": "session_Margarida_1756195066534",
+        "createdAt": "2025-08-26T07:57:46.535Z",
+        "updatedAt": "2025-08-26T07:57:46.535Z"
+      }
+    },
+    {
+      "id": "cmes98js9000tjs04upxrz2bw",
+      "restaurantId": "por",
+      "userId": "cmes98j9n000rjs045lqredcr",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T07:58:51.178Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes98j9n000rjs045lqredcr",
+        "email": null,
+        "name": "Nicola",
+        "sessionId": "session_Nicola_1756195130506",
+        "createdAt": "2025-08-26T07:58:50.507Z",
+        "updatedAt": "2025-08-26T07:58:50.507Z"
+      }
+    },
+    {
+      "id": "cmes9ad6m000wjs04bxs3imnm",
+      "restaurantId": "valimo-park",
+      "userId": "cmes9acw5000ujs0424w0y7dd",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T08:00:15.934Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes9acw5000ujs0424w0y7dd",
+        "email": null,
+        "name": "VY",
+        "sessionId": "session_VY_1756195215556",
+        "createdAt": "2025-08-26T08:00:15.557Z",
+        "updatedAt": "2025-08-26T08:00:15.557Z"
+      }
+    },
+    {
+      "id": "cmes9dxmg000jk004wjpa2ijn",
+      "restaurantId": "valimo-park",
+      "userId": "cmes9dxbz000hk004tcq2a20l",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T08:03:02.392Z",
+      "restaurant": {
+        "id": "valimo-park",
+        "name": "Valimo Park",
+        "location": "Valimo",
+        "description": "ISS / Flockler feed",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes9dxbz000hk004tcq2a20l",
+        "email": null,
+        "name": "Namita Savla",
+        "sessionId": "session_Namita Savla_1756195382015",
+        "createdAt": "2025-08-26T08:03:02.016Z",
+        "updatedAt": "2025-08-26T08:03:02.016Z"
+      }
+    },
+    {
+      "id": "cmes9p5sb0002jo04czsr49yr",
+      "restaurantId": "factory",
+      "userId": "cmes9p5hv0000jo04fqfy4uzg",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T08:11:46.185Z",
+      "restaurant": {
+        "id": "factory",
+        "name": "Factory Pitäjänmäki",
+        "location": "Pitäjänmäki",
+        "description": "AI extractor on Factory site",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmes9p5hv0000jo04fqfy4uzg",
+        "email": null,
+        "name": "Juha",
+        "sessionId": "session_Juha_1756195905810",
+        "createdAt": "2025-08-26T08:11:45.812Z",
+        "updatedAt": "2025-08-26T08:11:45.812Z"
+      }
+    },
+    {
+      "id": "cmesasxgh000njv04jkget4ra",
+      "restaurantId": "por",
+      "userId": "cmesasx5x000ljv04pfk3k5gw",
+      "weekOf": "2025-08-25T00:00:00.000Z",
+      "createdAt": "2025-08-26T08:42:41.634Z",
+      "restaurant": {
+        "id": "por",
+        "name": "Pitäjänmäen Osuusruokala (POR)",
+        "location": "Pitäjänmäki",
+        "description": "POR kitchen (WordPress / HTML)",
+        "createdAt": "2025-08-25T23:05:34.805Z",
+        "updatedAt": "2025-08-25T23:05:34.805Z"
+      },
+      "user": {
+        "id": "cmesasx5x000ljv04pfk3k5gw",
+        "email": null,
+        "name": "ekin",
+        "sessionId": "session_ekin_1756197761252",
+        "createdAt": "2025-08-26T08:42:41.253Z",
+        "updatedAt": "2025-08-26T08:42:41.253Z"
+      }
+    }
+  ],
+  "votingSessions": [
+    {
+      "id": "cmerq6rcm0000or6plmmitsqn",
+      "weekOf": "2025-08-24T21:00:00.000Z",
+      "isActive": true,
+      "winnerId": null,
+      "createdAt": "2025-08-25T23:05:34.966Z",
+      "updatedAt": "2025-08-25T23:05:34.966Z"
+    }
+  ]
+}

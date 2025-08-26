@@ -70,7 +70,14 @@ export default function Home() {
   const { hasVoted, votedRestaurantId, refreshVoteStatus } = useUserVote();
   const { voters, refetchVoters } = useVoters(); // Add refetchVoters
 
-  const isVotingOpen = true; // Keep for testing
+const isVotingOpen = useMemo(() => {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+  
+  // Monday-Friday, 7 AM to 12 PM (noon)
+  return day >= 1 && day <= 5 && hour >= 7 && hour < 12;
+}, []);
 
   const handleRemoveVote = async () => {
   const result = await removeVote();
