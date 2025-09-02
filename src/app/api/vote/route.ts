@@ -1,25 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getCurrentWeekStart, checkVotingStatus } from '@/lib/time/week'
 
 console.log('🚀 Vote route file loaded at:', new Date().toISOString())
-
-// Helper functions
-function getCurrentWeekStart(): Date {
-  const now = new Date()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - now.getDay() + 1)
-  monday.setHours(0, 0, 0, 0)
-  return monday
-}
-
-function checkVotingStatus(): boolean {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const hours = now.getHours()
-  
-  // Voting open: Monday (1) all day, Tuesday (2) until noon
-  return dayOfWeek === 1 || (dayOfWeek === 2 && hours < 12)
-}
 
 export async function GET() {
   console.log('🔍 GET /api/vote called at:', new Date().toISOString())
@@ -273,4 +256,3 @@ export async function DELETE(request: Request) {
     )
   }
 }
-

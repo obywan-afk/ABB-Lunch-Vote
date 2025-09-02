@@ -26,9 +26,12 @@ export async function GET(request: NextRequest) {
  // Replace the existing auto-cleanup section with:
 if (lastCleanupDate !== today) {
   try {
-    // Call your full cleanup logic
+    // Call your full cleanup logic with proper security header
     const response = await fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
-      method: 'POST'
+      method: 'POST',
+      headers: {
+        'x-cron-secret': process.env.CRON_SECRET || ''
+      }
     });
     const result = await response.json();
     console.log('Auto-cleanup result:', result);
