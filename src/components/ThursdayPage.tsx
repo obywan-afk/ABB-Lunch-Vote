@@ -477,7 +477,7 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
           <div className="container mx-auto">
             <div className="flex justify-between items-center">
               <p className="font-mono text-xs text-purple-400/60 tracking-wider">
-                © SYSTEM_1998 // FLUORESCENT_NIGHTS_V2.0
+                © SYSTEM_1998 // FLUORESCENT_NIGHTS_V2.0 // ALL_RIGHTS_RESERVED // LARS OBERHOFER
               </p>
               <div className="flex items-center gap-2 font-mono text-xs text-cyan-400/60">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />

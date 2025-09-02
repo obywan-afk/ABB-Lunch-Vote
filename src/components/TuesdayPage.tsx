@@ -433,7 +433,7 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
         <footer className="relative mt-20 py-8 backdrop-blur-xl bg-black/30 border-t border-white/10">
           <div className="container mx-auto text-center">
             <p className="text-sm text-white/40">
-              © {new Date().getFullYear()} MOTION DESIGN TEAM • Crafted with precision
+              © {new Date().getFullYear()} Lars Oberhofer • Crafted with hunger and ❤️ in Helsinki
             </p>
           </div>
         </footer>
