@@ -52,13 +52,29 @@ model VoteHistory {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String?  @unique
-  name      String?
-  sessionId String   @unique
-  votes     Vote[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String      @id @default(cuid())
+  email      String?     @unique
+  name       String?
+  sessionId  String      @unique
+  votes      Vote[]
+  lunchNotes LunchNote[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model LunchNote {
+  id         String   @id @default(cuid())
+  dateKey    String   @db.VarChar(10)  // YYYY-MM-DD format
+  message    String   @db.VarChar(500) // Max 500 chars, enforced at DB level
+  authorId   String
+  authorName String   @db.VarChar(255) // Display name snapshot at time of posting
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  user User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@index([dateKey, createdAt])
+  @@index([authorId])
 }
 
 model VotingSession {

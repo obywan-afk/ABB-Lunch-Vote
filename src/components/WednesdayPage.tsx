@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
 import { useDayVoting } from '@/hooks/useDayVoting'
 import { ABBNeuralRestaurantCard } from '@/components/cards/ABBNeuralRestaurantCard'
+import { LunchNotesDrawer } from '@/components/LunchNotesDrawer'
 import { TIP_JAR_URL } from '@/lib/config'
 
 type Language = 'en' | 'fi'
@@ -110,6 +111,9 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
 
   return (
     <>
+      {/* Lunch Notes Drawer */}
+      <LunchNotesDrawer />
+      
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950">
         {/* Background effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">

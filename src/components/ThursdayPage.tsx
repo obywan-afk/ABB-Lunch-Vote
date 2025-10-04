@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
 import { useDayVoting } from '@/hooks/useDayVoting'
 import { RetroRestaurantCard } from '@/components/cards/RetroRestaurantCard'
+import { LunchNotesDrawer } from '@/components/LunchNotesDrawer'
 import { TIP_JAR_URL } from '@/lib/config'
 
 type Language = 'en' | 'fi'
@@ -79,6 +80,9 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
 
   return (
     <>
+      {/* Lunch Notes Drawer */}
+      <LunchNotesDrawer />
+      
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-950 via-pink-950 to-black">
         {/* Animated retro grid background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
