@@ -20,7 +20,7 @@ async function main() {
   const restaurants = [
     { id: 'tellus',           name: 'Tellus',                          location: 'ABB Campus',     description: 'Compass Group (RSS feed)' },
     { id: 'por',              name: 'Pitäjänmäen Osuusruokala (POR)',  location: 'Pitäjänmäki',    description: 'POR kitchen (WordPress / HTML)' },
-    { id: 'valimo-park',      name: 'Valimo Park',                     location: 'Valimo',         description: 'ISS / Flockler feed' },
+    { id: 'valimo-park',      name: 'Faundori',                        location: 'Valimo',         description: 'ISS / Flockler feed' },
     { id: 'valaja',           name: 'Valaja',                          location: 'Pitäjänmäki',    description: 'Sodexo weekly_json/190' },
     { id: 'factory',          name: 'Factory Pitäjänmäki',             location: 'Pitäjänmäki',    description: 'AI extractor on Factory site' },
     { id: 'ravintola-valimo', name: 'Ravintola Valimo',                location: 'Pitäjänmäki',    description: 'AI extractor on Valimo site' },

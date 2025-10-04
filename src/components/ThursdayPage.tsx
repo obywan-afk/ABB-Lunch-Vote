@@ -1,19 +1,19 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import type { Restaurant } from '@/lib/types'
-import { useToast } from "@/hooks/use-toast"
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useVoting, useUserVote } from '@/hooks/useVoting'
-import { useVoters } from '@/hooks/useVoters'
-import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { useDayVoting } from '@/hooks/useDayVoting'
+import { RetroRestaurantCard } from '@/components/cards/RetroRestaurantCard'
 
 type Language = 'en' | 'fi'
 
-// VHS Logo Component
+function RestaurantCardSkeleton() {
+  return (
+    <div className="rounded-lg bg-gradient-to-br from-purple-950/40 to-pink-950/40 animate-pulse border-2 border-purple-500/20" style={{ minHeight: '400px' }} />
+  )
+}
+
 function VHSLogo() {
   return (
     <div className="relative group">
@@ -53,189 +53,7 @@ function VHSLogo() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Retro Restaurant Card
-function RetroRestaurantCard({ 
-  restaurant, 
-  onVote, 
-  userHasVoted, 
-  hasVotedForThis, 
-  isWinner, 
-  isVotingOpen,
-  index 
-}: any) {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  return (
-    <div 
-      className="relative group perspective-1000"
-      style={{ 
-        animationDelay: `${index * 0.1}s`,
-        animation: 'fadeInUp 0.8s ease-out forwards',
-        opacity: 0
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Neon glow background */}
-      <div className={cn(
-        "absolute -inset-1 rounded-lg opacity-60 group-hover:opacity-100 transition-all duration-500 blur-xl",
-        isWinner && "opacity-100 animate-pulse",
-        hasVotedForThis 
-          ? "bg-gradient-to-r from-cyan-500 to-pink-500" 
-          : "bg-gradient-to-r from-purple-600 to-pink-600"
-      )} />
-      
-      {/* Main card with transform */}
-      <div className={cn(
-        "relative h-full rounded-lg border-2 transition-all duration-500 transform-gpu",
-        isWinner 
-          ? "bg-gradient-to-br from-yellow-900/40 via-pink-900/40 to-purple-900/40 border-yellow-400/60" 
-          : hasVotedForThis 
-            ? "bg-gradient-to-br from-cyan-900/40 via-purple-900/40 to-pink-900/40 border-cyan-400/60"
-            : "bg-gradient-to-br from-purple-950/60 via-pink-950/60 to-black/80 border-purple-500/40",
-        "backdrop-blur-md shadow-2xl",
-        isHovered && "scale-[1.02] rotate-y-5"
-      )}>
-        
-        {/* Scan lines overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent animate-scan" />
-        </div>
-        
-        {/* VHS tracking noise */}
-        <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30">
-          <div 
-            className="absolute inset-0" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E")`
-            }}
-          />
-        </div>
-        
-        {/* Winner badge */}
-        {isWinner && (
-          <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-pink-400 blur animate-pulse" />
-              <div className="relative bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 text-black px-6 py-2 font-black text-xs tracking-wider shadow-xl transform skew-x-12">
-                ★ WINNER ★
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Vote counter */}
-        {restaurant.votes > 0 && (
-          <div className="absolute -top-3 -right-3 z-10">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full blur-md animate-pulse" />
-              <div className="relative bg-gradient-to-r from-pink-600 to-purple-600 text-white w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl shadow-2xl border-2 border-white/30">
-                {restaurant.votes}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="p-6 relative z-10">
-          {/* Header with chrome text */}
-          <div className="mb-6">
-            <h3 className="text-3xl font-black italic mb-2 relative inline-block">
-              <span className="absolute inset-0 text-pink-400 blur-sm">{restaurant.name}</span>
-              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-white via-pink-200 to-cyan-200">
-                {restaurant.name}
-              </span>
-            </h3>
-            
-            <div className="flex items-center gap-3 text-sm">
-              <span className="text-cyan-400 font-mono">▸</span>
-              <span className="text-purple-300/80">{restaurant.location || 'LOCATION_NULL'}</span>
-              {restaurant.url && (
-                <a 
-                  href={restaurant.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="ml-auto px-3 py-1 bg-gradient-to-r from-purple-600/50 to-pink-600/50 rounded border border-pink-400/30 text-white/80 hover:text-white transition-colors text-xs font-mono"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  WWW
-                </a>
-              )}
-            </div>
-          </div>
-          
-          {/* Menu display with retro terminal style - no scroll */}
-          <div className="mb-6 p-4 bg-black/50 rounded border border-cyan-500/30">
-            <div className="font-mono text-xs text-cyan-400 mb-2 opacity-60">
-              ▸ MENU.TXT
-            </div>
-            {restaurant.parsedMenu ? (
-              <div className="space-y-1 text-green-400 text-xs font-mono">
-                {restaurant.parsedMenu.split('\n').slice(0, 6).map((line: string, i: number) => (
-                  <div key={i} className="flex">
-                    <span className="text-purple-400/60 mr-2 select-none">{String(i + 1).padStart(2, '0')}</span>
-                    <span className="truncate">{line}</span>
-                  </div>
-                ))}
-                {restaurant.parsedMenu.split('\n').length > 6 && (
-                  <div className="text-purple-400/60 text-xs pt-1">
-                    ... +{restaurant.parsedMenu.split('\n').length - 6} more items
-                  </div>
-                )}
-              </div>
-            ) : restaurant.rawMenu ? (
-              <div className="text-yellow-400/80 text-xs font-mono line-clamp-4">
-                {restaurant.rawMenu}
-              </div>
-            ) : (
-              <div className="text-red-400/60 text-sm font-mono animate-pulse">
-                ERROR: MENU_DATA_NOT_FOUND
-              </div>
-            )}
-          </div>
-          
-          {/* Vote button with retro style */}
-          <div className="mt-auto">
-            {isVotingOpen ? (
-              hasVotedForThis ? (
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-pink-500 blur-md opacity-50" />
-                  <div className="relative flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-cyan-600/30 to-pink-600/30 rounded border-2 border-cyan-400/60">
-                    <span className="text-cyan-300 font-black tracking-wider">◆ SELECTED ◆</span>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={onVote}
-                  disabled={userHasVoted}
-                  className={cn(
-                    "relative w-full py-3 px-4 rounded font-black tracking-wider transition-all duration-300 transform group/btn overflow-hidden",
-                    userHasVoted
-                      ? "bg-gray-900/50 border-2 border-gray-600/30 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-pink-600/50 to-purple-600/50 border-2 border-pink-400/60 text-white hover:scale-105 hover:border-cyan-400/80"
-                  )}
-                >
-                  {/* Button glow effect */}
-                  {!userHasVoted && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                  )}
-                  <span className="relative">
-                    {userHasVoted ? "ACCESS_DENIED" : "▸ CAST VOTE"}
-                  </span>
-                </button>
-              )
-            ) : (
-              <div className="text-center py-3 text-red-400/60 text-sm font-mono animate-pulse">
-                [VOTING_CLOSED]
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  )
 }
 
 interface ThursdayPageProps {
@@ -246,70 +64,17 @@ interface ThursdayPageProps {
 }
 
 export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: ThursdayPageProps) {
-  const { toast } = useToast()
-  const router = useRouter()
-
-  const { restaurants: backendRestaurants, winner, loading: votingLoading, vote, removeVote, refetch } = useVoting()
-  const { hasVoted, votedRestaurantId, refreshVoteStatus } = useUserVote()
-  const { voters, refetchVoters } = useVoters()
-
-  const isVotingOpen = useMemo(() => {
-    const now = new Date()
-    const hour = now.getHours()
-    const day = now.getDay()
-    return day >= 1 && day <= 5 && hour >= 7 && hour < 12
-  }, [])
-
-  const handleRemoveVote = async () => {
-    const result = await removeVote()
-    if (result.success) {
-      await Promise.all([refetch(), refreshVoteStatus(), refetchVoters()])
-      toast({
-        title: "Vote Removed",
-        description: "Your vote has been cleared from the system.",
-      })
-    } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to remove vote.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleVote = async (id: string) => {
-    if (!isVotingOpen) return
-
-    const result = await vote(id)
-    if (result.success) {
-      await Promise.all([refetch(), refreshVoteStatus(), refetchVoters()])
-      
-      const restaurantName = restaurants.find(r => r.id === id)?.name
-      toast({
-        title: "Vote Registered",
-        description: `Selected: ${restaurantName}`,
-      })
-    } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to cast vote.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const mergedRestaurants = useMemo(() => {
-    if (!backendRestaurants.length) return restaurants
-    
-    return restaurants.map(restaurant => {
-      const backendRestaurant = backendRestaurants.find((br: any) => br.name === restaurant.name)
-      return {
-        ...restaurant,
-        votes: backendRestaurant?.votes || 0,
-        id: backendRestaurant?.id || restaurant.id
-      }
-    }).sort((a, b) => b.votes - a.votes)
-  }, [restaurants, backendRestaurants])
+  const {
+    mergedRestaurants,
+    winner,
+    votingLoading,
+    hasVoted,
+    votedRestaurantId,
+    isVotingOpen,
+    voters,
+    handleVote,
+    handleRemoveVote,
+  } = useDayVoting(restaurants)
 
   return (
     <>
@@ -446,10 +211,10 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
           )}
 
           {/* Restaurant grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
             {votingLoading ? (
               [...Array(6)].map((_, i) => (
-                <div key={i} className="h-96 rounded-lg bg-gradient-to-br from-purple-950/40 to-pink-950/40 animate-pulse border-2 border-purple-500/20" />
+                <RestaurantCardSkeleton key={i} />
               ))
             ) : mergedRestaurants.length === 0 ? (
               <div className="col-span-full text-center py-12 text-purple-400/60 font-mono">
@@ -548,57 +313,6 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
         
         .rotate-y-5:hover {
           transform: rotateY(5deg);
-        }
-        
-        /* Custom scrollbar with neon style */
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.5);
-          border: 1px solid rgba(255, 0, 255, 0.2);
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #ec4899, #8b5cf6);
-          border-radius: 0;
-          box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
-        }
-        
-        /* Chrome text effect helper */
-        .chrome-text {
-          background: linear-gradient(
-            180deg,
-            #fff 0%,
-            #999 50%,
-            #fff 100%
-          );
-          -webkit-background-clip: text;
-          background-clip: text;
-        }
-        
-        /* VHS glitch effect on hover */
-        @keyframes glitch {
-          0%, 100% {
-            text-shadow: 
-              2px 2px 0 rgba(255, 0, 255, 0.8),
-              -2px -2px 0 rgba(0, 255, 255, 0.8);
-          }
-          25% {
-            text-shadow: 
-              -2px 2px 0 rgba(255, 0, 255, 0.8),
-              2px -2px 0 rgba(0, 255, 255, 0.8);
-          }
-          50% {
-            text-shadow: 
-              2px -2px 0 rgba(255, 0, 255, 0.8),
-              -2px 2px 0 rgba(0, 255, 255, 0.8);
-          }
-        }
-        
-        .glitch-hover:hover {
-          animation: glitch 0.3s infinite;
         }
       `}</style>
     </>

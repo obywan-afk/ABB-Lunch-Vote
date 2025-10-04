@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: 'ABB Lunch Vote',
-  description: 'Vote for your favorite lunch spot at ABB.',
+  description: 'Vote for your favorite lunch spot with your favorite team.',
 };
 
 export default function RootLayout({

@@ -34,7 +34,7 @@ Domino-rahkaa marjoilla (L,G)`;
 export const initialRestaurants: Restaurant[] = [
     { id: 'tellus', name: 'Tellus', url: 'https://www.compass-group.fi/menuapi/feed/rss/current-week?costNumber=3105&language=en/', rawMenu: tellusRawMenu, rawMenuFi: tellusRawMenu, votes: 0 },
     { id: 'por', name: 'Por', url: 'https://por.fi/menu/', rawMenu: porRawMenuEn, rawMenuFi: porRawMenuFi, votes: 0 },
-    { id: 'valimo-park', name: 'Valimo Park', url: 'https://ravintolapalvelut.iss.fi/valimo-park', rawMenu: valimoParkRawMenuEn, rawMenuFi: valimoParkRawMenuFi, votes: .5 },
+    { id: 'valimo-park', name: 'Faundori', url: 'https://ravintolapalvelut.iss.fi/valimo-park', rawMenu: valimoParkRawMenuEn, rawMenuFi: valimoParkRawMenuFi, votes: .5 },
     { id: 'valaja', name: 'Valaja', url: 'https://www.sodexo.fi/en/restaurants/restaurant-valaja', rawMenu: valajaRawMenuEn, rawMenuFi: valajaRawMenuFi, votes: 0 },
     { id: 'factory', name: 'Factory', url: 'https://ravintolafactory.com/lounasravintolat/ravintolat/helsinki-pitajanmaki/', rawMenu: factoryRawMenuEn, rawMenuFi: factoryRawMenuFi, votes: 0 },
     { id: 'ravintola-valimo', name: 'Ravintola Valimo', url: 'https://www.ravintolavalimo.fi/', rawMenu: ravintolaValimoRawMenuEn, rawMenuFi: ravintolaValimoRawMenuFi, votes: 0 },

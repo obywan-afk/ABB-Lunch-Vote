@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast"
 import { TuesdayPage } from '@/components/TuesdayPage'
 import { WednesdayPage } from '@/components/WednesdayPage'
 import { ThursdayPage } from '@/components/ThursdayPage'
-import { Button } from '@/components/ui/button'
 
 type Language = 'en' | 'fi'
 type DevDay = '' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday'
@@ -119,36 +118,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Day Selector */}
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="bg-black/80 backdrop-blur-xl rounded-full p-2 border border-white/20 shadow-2xl">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setSelectedDay('tuesday')}
-              variant={selectedDay === 'tuesday' ? 'default' : 'ghost'}
-              className={`rounded-full px-6 py-2 transition-all duration-300 ${
-                selectedDay === 'tuesday'
-                  ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Tuesday
-            </Button>
-            <Button
-              onClick={() => setSelectedDay('wednesday')}
-              variant={selectedDay === 'wednesday' ? 'default' : 'ghost'}
-              className={`rounded-full px-6 py-2 transition-all duration-300 ${
-                selectedDay === 'wednesday'
-                  ? 'bg-gradient-to-r from-cyan-500 to-green-500 text-black shadow-lg font-mono font-bold'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Wednesday
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Render appropriate day component */}
       {selectedDay === 'tuesday' ? (
         <TuesdayPage

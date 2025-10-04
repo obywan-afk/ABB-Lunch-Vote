@@ -544,8 +544,8 @@ export class RestaurantScrapers {
 
   static async scrapeValimoPark(opts?: { targetDayFi?: string }): Promise<ScrapedMenu> {
     const restaurantId = 'valimo-park';
-    const restaurantName = 'Valimo Park';
-    console.log(`🍽️ Scraping Valimo Park (ISS + Flockler)…`);
+    const restaurantName = 'Faundori';
+    console.log(`🍽️ Scraping Faundori (ISS + Flockler)…`);
 
     try {
       const apiUrl = 'https://api.flockler.com/v1/sites/8357/articles?count=12&sideloading=false';
@@ -557,15 +557,15 @@ export class RestaurantScrapers {
       const days = [...DAY_FI, ...DAY_EN];
       const weekdayRe = new RegExp(`\\b(${days.join('|')})\\b`, 'i');
 
-      // Filter articles to only those from Valimo Park (Faundori section)
-      const valimoParkArticles = articles.filter((a: any) => 
+      // Filter articles to only those from Faundori section
+      const valimoParkArticles = articles.filter((a: any) =>
         a?.section?.section_url === 'valimo-park' || a?.section?.name === 'Faundori'
       );
 
-      console.log(`🔍 Found ${valimoParkArticles.length} Valimo Park articles out of ${articles.length} total`);
+      console.log(`🔍 Found ${valimoParkArticles.length} Faundori articles out of ${articles.length} total`);
 
       if (!valimoParkArticles.length) {
-        throw new Error('No Valimo Park articles found in Flockler feed');
+        throw new Error('No Faundori articles found in Flockler feed');
       }
 
       // Find the most relevant article with weekday content
@@ -588,7 +588,7 @@ export class RestaurantScrapers {
         .replace(/\n{3,}/g, '\n\n');
 
       text = this.decodeEntities(text).trim();
-      console.log('🔎 Valimo Park cleaned head:', text.slice(0, 400));
+      console.log('🔎 Faundori cleaned head:', text.slice(0, 400));
 
       // Find markers for each weekday
       const marks: { name: string; pos: number }[] = [];
@@ -655,20 +655,20 @@ export class RestaurantScrapers {
       const success = rawMenu.length > 40;
 
       console.log(
-        `📊 Valimo Park scraping result: ${success ? 'SUCCESS' : 'FAILED'} (len=${rawMenu.length})`
+        `📊 Faundori scraping result: ${success ? 'SUCCESS' : 'FAILED'} (len=${rawMenu.length})`
       );
       return {
         restaurantId,
         restaurantName,
-        rawMenu: success ? rawMenu : 'Could not extract menu from Valimo Park (Flockler)',
+        rawMenu: success ? rawMenu : 'Could not extract menu from Faundori (Flockler)',
         success,
         error: success ? undefined : 'Menu content not found or too short',
       };
     } catch (error: any) {
-      console.log(`❌ Valimo Park scraping failed:`, error);
+      console.log(`❌ Faundori scraping failed:`, error);
       return {
         restaurantId: 'valimo-park',
-        restaurantName: 'Valimo Park',
+        restaurantName: 'Faundori',
         rawMenu: '',
         success: false,
         error: error?.message || 'Unknown error',

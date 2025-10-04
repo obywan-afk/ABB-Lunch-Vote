@@ -16,7 +16,7 @@ const restaurants = [
   },
   {
     id: 'valimo-park',
-    name: 'Valimo Park',
+    name: 'Faundori',
     location: 'Helsinki',
     description: 'Park-side dining with seasonal menu'
   },

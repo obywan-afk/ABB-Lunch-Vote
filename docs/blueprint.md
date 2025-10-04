@@ -2,7 +2,7 @@
 
 ## Core Features:
 
-- Menu Scraping: Scrape menus from specified restaurant URLs (Tellus, Por, Valimo Park, Valaja, Factory, Valimo) every Monday.
+- Menu Scraping: Scrape menus from specified restaurant URLs (Tellus, Por, Faundori, Valaja, Factory, Valimo) every Monday.
 - Menu Parsing: Use a tool incorporating LLM to parse the scraped menu content, especially to extract relevant data and present a clean menu, since the format from each restaurant varies.
 - Menu Display: Display the scraped and parsed menus for each restaurant in a clear and consistent format.
 - Restaurant Voting: Allow users (ABB team members) to vote for their preferred restaurant from Monday to Tuesday before midday.

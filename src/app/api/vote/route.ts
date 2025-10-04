@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getCurrentWeekStart, checkVotingStatus } from '@/lib/time/week'
+import { getCurrentWeekStart, getCurrentDate, checkVotingStatus } from '@/lib/time/week'
 
 console.log('🚀 Vote route file loaded at:', new Date().toISOString())
 
@@ -8,14 +8,15 @@ export async function GET() {
   console.log('🔍 GET /api/vote called at:', new Date().toISOString())
   
   try {
-    const weekOf = getCurrentWeekStart()
+    const currentDate = getCurrentDate()
+    console.log('🔍 Current date:', currentDate)
     
-    // Get all restaurants with their vote counts for this week
+    // Get all restaurants with their vote counts for TODAY
     const restaurants = await prisma.restaurant.findMany({
       include: {
         votes: {
           where: {
-            weekOf: weekOf
+            date: currentDate
           }
         }
       }
@@ -46,7 +47,8 @@ export async function GET() {
       winner,
       isVotingOpen: checkVotingStatus(),
       message: 'Vote endpoint is active. Use POST to cast a vote.',
-      currentTime: new Date().toISOString()
+      currentTime: new Date().toISOString(),
+      currentDate: currentDate
     })
 
   } catch (error) {
@@ -131,19 +133,21 @@ export async function POST(request: Request) {
         console.log('🔍 User found:', user.name)
       }
 
+      const currentDate = getCurrentDate()
       const weekOf = getCurrentWeekStart()
+      console.log('🔍 Current date:', currentDate)
       console.log('🔍 Week of:', weekOf)
 
-      // Check if user has already voted this week
+      // Check if user has already voted TODAY
       const existingVote = await prisma.vote.findFirst({
         where: {
           userId: user.id,
-          weekOf: weekOf
+          date: currentDate
         }
       })
 
       if (existingVote) {
-        console.log('🔍 User already voted this week, updating vote')
+        console.log('🔍 User already voted today, updating vote')
         
         // Update existing vote instead of rejecting
         await prisma.vote.update({
@@ -169,6 +173,7 @@ export async function POST(request: Request) {
         data: {
           restaurantId,
           userId: user.id,
+          date: currentDate,
           weekOf: weekOf
         }
       })
@@ -223,14 +228,14 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const weekOf = getCurrentWeekStart()
-    console.log('🔍 Week of:', weekOf)
+    const currentDate = getCurrentDate()
+    console.log('🔍 Current date:', currentDate)
 
-    // Find and delete the user's vote for this week
+    // Find and delete the user's vote for TODAY
     const deletedVote = await prisma.vote.deleteMany({
       where: {
         userId: user.id,
-        weekOf: weekOf
+        date: currentDate
       }
     })
 

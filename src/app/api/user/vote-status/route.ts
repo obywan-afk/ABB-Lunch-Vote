@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getCurrentDate } from '@/lib/time/week';
 
 export async function GET(request: Request) {
   try {
@@ -12,11 +13,8 @@ export async function GET(request: Request) {
       });
     }
 
-    // Get current week's Monday
-    const now = new Date();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1);
-    monday.setHours(0, 0, 0, 0);
+    // Get current date
+    const currentDate = getCurrentDate();
 
     // Find user
     const user = await prisma.user.findFirst({
@@ -30,12 +28,12 @@ export async function GET(request: Request) {
       });
     }
 
-    // Check if user has voted this week
+    // Check if user has voted TODAY
     const vote = await prisma.vote.findUnique({
       where: {
-        userId_weekOf: {
+        userId_date: {
           userId: user.id,
-          weekOf: monday
+          date: currentDate
         }
       }
     });

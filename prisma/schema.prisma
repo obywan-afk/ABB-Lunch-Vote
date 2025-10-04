@@ -26,10 +26,12 @@ model Vote {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   userId       String
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weekOf       DateTime
+  date         String     // YYYY-MM-DD format for the specific voting day
+  weekOf       DateTime   // Keep for reporting/history
   createdAt    DateTime   @default(now())
   
-  @@unique([userId, weekOf])
+  @@unique([userId, date])
+  @@index([date])
   @@index([weekOf])
 }
 
