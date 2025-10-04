@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
 import { useDayVoting } from '@/hooks/useDayVoting'
 import { MotionRestaurantCard } from '@/components/cards/MotionRestaurantCard'
+import { TIP_JAR_URL } from '@/lib/config'
 
 type Language = 'en' | 'fi'
 
@@ -230,9 +231,23 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
 
         {/* Footer */}
         <footer className="relative mt-20 py-8 backdrop-blur-xl bg-black/30 border-t border-white/10">
-          <div className="container mx-auto text-center">
+          <div className="container mx-auto flex flex-col items-center gap-3 text-center">
             <p className="text-sm text-white/40">
               © {new Date().getFullYear()} Lars Oberhofer • Crafted with hunger and ❤️ in Helsinki
+            </p>
+            <p className="max-w-xl text-xs text-white/50">
+              If these menus brighten your lunch break, you can quietly
+              {' '}
+              <a
+                href={TIP_JAR_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-white/70 underline decoration-dotted underline-offset-4 transition hover:text-white"
+              >
+                <span aria-hidden="true">☕</span>
+                <span>buy me a coffee</span>
+              </a>
+              . No pressure—thanks for hanging out either way.
             </p>
           </div>
         </footer>

@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
 import { useDayVoting } from '@/hooks/useDayVoting'
 import { RetroRestaurantCard } from '@/components/cards/RetroRestaurantCard'
+import { TIP_JAR_URL } from '@/lib/config'
 
 type Language = 'en' | 'fi'
 
@@ -240,10 +241,26 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
         {/* Footer with VHS timestamp */}
         <footer className="relative mt-20 py-8 backdrop-blur-md bg-black/50 border-t border-pink-500/30 z-10">
           <div className="container mx-auto">
-            <div className="flex justify-between items-center">
-              <p className="font-mono text-xs text-purple-400/60 tracking-wider">
-                © SYSTEM_1998 // FLUORESCENT_NIGHTS_V2.0 // ALL_RIGHTS_RESERVED // LARS OBERHOFER
-              </p>
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 text-center md:text-left">
+                <p className="font-mono text-xs text-purple-400/60 tracking-wider">
+                  © SYSTEM_1998 // FLUORESCENT_NIGHTS_V2.0 // ALL_RIGHTS_RESERVED // LARS OBERHOFER
+                </p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-pink-200/60">
+                  Feeling the retro tune? There’s a quiet link to
+                  {' '}
+                  <a
+                    href={TIP_JAR_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-pink-100/80 underline decoration-dotted underline-offset-4 transition hover:text-pink-100"
+                  >
+                    <span aria-hidden="true">☕</span>
+                    <span>buy me a coffee</span>
+                  </a>
+                  . Totally optional, always appreciated.
+                </p>
+              </div>
               <div className="flex items-center gap-2 font-mono text-xs text-cyan-400/60">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 <span>REC</span>

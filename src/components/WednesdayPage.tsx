@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
 import { useDayVoting } from '@/hooks/useDayVoting'
 import { ABBNeuralRestaurantCard } from '@/components/cards/ABBNeuralRestaurantCard'
+import { TIP_JAR_URL } from '@/lib/config'
 
 type Language = 'en' | 'fi'
 
@@ -251,9 +252,23 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
 
         {/* Footer */}
         <footer className="relative mt-20 py-8 backdrop-blur-xl bg-slate-900/80 border-t-2 border-cyan-400/30">
-          <div className="container mx-auto text-center">
-            <p className="text-sm text-cyan-400/40 font-mono">
+          <div className="container mx-auto flex flex-col items-center gap-3 text-center font-mono">
+            <p className="text-sm text-cyan-400/40">
               © 2100 ABB NEURAL SYSTEMS • PRECISION AUTOMATED • GRID CONNECTED
+            </p>
+            <p className="max-w-xl text-[11px] uppercase tracking-[0.28em] text-cyan-200/50">
+              SIGNAL STABLE. OPTIONAL HUMAN THANK-YOU PROTOCOL:
+              {' '}
+              <a
+                href={TIP_JAR_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-cyan-100/70 underline decoration-dotted underline-offset-4 transition hover:text-cyan-100"
+              >
+                <span aria-hidden="true">☕</span>
+                <span>buy me a coffee</span>
+              </a>
+              . CONTINUE FEEDING DATA EITHER WAY.
             </p>
           </div>
         </footer>

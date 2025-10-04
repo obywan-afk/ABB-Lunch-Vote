@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-
-// Helper function to get current week start (Monday)
-function getCurrentWeekStart(): Date {
-  const now = new Date()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - now.getDay() + 1)
-  monday.setHours(0, 0, 0, 0)
-  return monday
-}
+import { getCurrentWeekStart } from '@/lib/time/week'
 
 export async function GET() {
   try {
