@@ -1,3 +1,5 @@
+import { todayKeyEuropeHelsinki } from '@/lib/menu/day'
+
 export function getCurrentWeekStart(): Date {
   const now = new Date()
   const monday = new Date(now)
@@ -6,13 +8,9 @@ export function getCurrentWeekStart(): Date {
   return monday
 }
 
-/** Get the current date in YYYY-MM-DD format */
+/** Get the current date in YYYY-MM-DD format using Helsinki timezone */
 export function getCurrentDate(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return todayKeyEuropeHelsinki()
 }
 
 /** Optional: if you want to delay any archiving until Tue 12:00 */

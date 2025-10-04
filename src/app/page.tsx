@@ -9,7 +9,8 @@ import { WednesdayPage } from '@/components/WednesdayPage'
 import { ThursdayPage } from '@/components/ThursdayPage'
 
 type Language = 'en' | 'fi'
-type DevDay = '' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday'
+type DevDay = '' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
+type DaySelection = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 
 // Remove a leading "Tiistai" line (optionally wrapped with dashes)
 function stripTiistaiHeader(text?: string) {
@@ -28,17 +29,19 @@ export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [language, setLanguage] = useState<Language>('en')
-  const [selectedDay, setSelectedDay] = useState<'tuesday' | 'wednesday'>('tuesday')
+  const [selectedDay, setSelectedDay] = useState<DaySelection>('tuesday')
   const [aiLimited, setAiLimited] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
-  const dayByIndex: Record<number, DevDay> = {
+  const dayByIndex: Record<number, DaySelection | undefined> = {
+    0: 'sunday',
     1: 'monday',
     2: 'tuesday',
     3: 'wednesday',
     4: 'thursday',
     5: 'friday',
+    6: 'saturday',
   }
 
   // Get current day and set default selection
@@ -46,10 +49,10 @@ export default function Home() {
     const currentDay = new Date().getDay()
     const today = dayByIndex[currentDay]
     
-    if (today === 'tuesday' || today === 'wednesday') {
+    if (today) {
       setSelectedDay(today)
     } else {
-      // Default to Tuesday if it's not Tuesday or Wednesday
+      // Fallback to Tuesday (shouldn't happen since we cover all days 0-6)
       setSelectedDay('tuesday')
     }
   }, [])
@@ -119,15 +122,23 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Render appropriate day component */}
-      {selectedDay === 'tuesday' ? (
-        <TuesdayPage
+      {selectedDay === 'wednesday' ? (
+        <WednesdayPage
+          restaurants={restaurants}
+          language={language}
+          setLanguage={setLanguage}
+          aiLimited={aiLimited}
+        />
+      ) : selectedDay === 'thursday' ? (
+        <ThursdayPage
           restaurants={restaurants}
           language={language}
           setLanguage={setLanguage}
           aiLimited={aiLimited}
         />
       ) : (
-        <WednesdayPage
+        // TuesdayPage as fallback for tuesday, monday, friday, saturday, sunday
+        <TuesdayPage
           restaurants={restaurants}
           language={language}
           setLanguage={setLanguage}

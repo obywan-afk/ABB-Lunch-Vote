@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { EnhancedMenuProcessor } from '@/lib/enhancedMenuProcessor'
-import { dayOverrideToFiEn, dateForNextWeekdayFi, todayKeyEuropeHelsinki } from '@/lib/menu/day'
+import { dayOverrideToFiEn, dateForNextWeekdayFi, todayKeyEuropeHelsinki, weekdayLabelFi } from '@/lib/menu/day'
 
 type Language = 'en' | 'fi'
 
@@ -17,29 +17,40 @@ export async function GET(request: NextRequest) {
   const dayParam = searchParams.get('day') || ''
   const dayOverride = dayParam ? dayOverrideToFiEn(dayParam) : null
   const targetDayFi = dayOverride?.fi || undefined
-  const dateKey = targetDayFi ? dateForNextWeekdayFi(targetDayFi) : undefined  // ✅ pretend-today
+  
+  // Check if requested day is today (case-insensitive comparison)
+  const todayFi = weekdayLabelFi()
+  const isToday = targetDayFi && targetDayFi.toLowerCase() === todayFi.toLowerCase()
+  
+  // Use today's date if requesting today, otherwise get next occurrence
+  const dateKey = targetDayFi 
+    ? (isToday ? todayKeyEuropeHelsinki() : dateForNextWeekdayFi(targetDayFi))
+    : undefined
 
   console.log(`🚀 Processing menus for language: ${language} (fresh=${forceFresh}, day=${targetDayFi ?? 'auto'}, dateKey=${dateKey ?? 'today'})`)
 
   // Auto-cleanup: Run once per day on first request
   const today = todayKeyEuropeHelsinki();
- // Replace the existing auto-cleanup section with:
-if (lastCleanupDate !== today) {
-  try {
-    // Call your full cleanup logic with proper security header
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
-      method: 'POST',
-      headers: {
-        'x-cron-secret': process.env.CRON_SECRET || ''
+  if (lastCleanupDate !== today) {
+    try {
+      // Only call cleanup if NEXTAUTH_URL is configured
+      if (process.env.NEXTAUTH_URL) {
+        const response = await fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
+          method: 'POST',
+          headers: {
+            'x-cron-secret': process.env.CRON_SECRET || ''
+          }
+        });
+        const result = await response.json();
+        console.log('Auto-cleanup result:', result);
+      } else {
+        console.log('Skipping auto-cleanup: NEXTAUTH_URL not configured');
       }
-    });
-    const result = await response.json();
-    console.log('Auto-cleanup result:', result);
-    lastCleanupDate = today;
-  } catch (error) {
-    console.error('Auto-cleanup failed:', error);
+      lastCleanupDate = today;
+    } catch (error) {
+      console.error('Auto-cleanup failed:', error);
+    }
   }
-}
 
   try {
     const dbRestaurants = await prisma.restaurant.findMany({

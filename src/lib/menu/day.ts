@@ -30,6 +30,8 @@ export function dayOverrideToFiEn(input: string): { fi: string; en: string } | n
     wed: { fi:'Keskiviikko', en:'Wednesday' }, wednesday:{ fi:'Keskiviikko', en:'Wednesday' },
     thu: { fi:'Torstai',   en:'Thursday' }, thursday:{ fi:'Torstai',   en:'Thursday' },
     fri: { fi:'Perjantai', en:'Friday' }, friday:{ fi:'Perjantai', en:'Friday' },
+    sat: { fi:'Lauantai', en:'Saturday' }, saturday:{ fi:'Lauantai', en:'Saturday' },
+    sun: { fi:'Sunnuntai', en:'Sunday' }, sunday:{ fi:'Sunnuntai', en:'Sunday' },
   };
   return map[s] || null;
 }

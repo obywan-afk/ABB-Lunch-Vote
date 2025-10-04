@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { todayKeyEuropeHelsinki } from '@/lib/menu/day';
 
 export async function GET() {
   try {
-    // Get current week's Monday
-    const now = new Date();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - now.getDay() + 1);
-    monday.setHours(0, 0, 0, 0);
+    // Get today's date in Helsinki timezone
+    const today = todayKeyEuropeHelsinki();
 
-    // Get all votes for this week with user names
+    // Get all votes for today with user names
     const votes = await prisma.vote.findMany({
       where: {
-        weekOf: monday
+        date: today
       },
       include: {
         user: {
