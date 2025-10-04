@@ -139,7 +139,7 @@ export function LunchNotesDrawer() {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <button
-            className="fixed top-24 right-6 z-40 group"
+            className="fixed top-24 right-6 z-[55] group"
             aria-label="Open lunch notes"
           >
             <div className="relative">
@@ -165,7 +165,7 @@ export function LunchNotesDrawer() {
 
         <SheetContent 
           side="right" 
-          className="w-full sm:w-[500px] backdrop-blur-2xl bg-slate-950/95 border-white/10 p-0 flex flex-col"
+          className="z-[70] w-full sm:w-[500px] backdrop-blur-2xl bg-slate-950/95 border-white/10 p-0 flex flex-col"
         >
           {/* Header */}
           <SheetHeader className="px-6 py-4 border-b border-white/10 bg-gradient-to-r from-violet-900/20 to-cyan-900/20">

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Restaurant } from '@/lib/types'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from '@/lib/utils'
@@ -16,11 +17,21 @@ function RestaurantCardSkeleton() {
   )
 }
 
-function MotionLogo() {
+function MotionLogo({ partyMode, onClick }: { partyMode: boolean; onClick: () => void }) {
+  const particleCount = partyMode ? 25 : 6;
+  const animationSpeed = partyMode ? 0.5 : 1;
+  
   return (
-    <div className="relative group cursor-pointer">
+    <div 
+      className="relative group cursor-pointer" 
+      onClick={onClick}
+      style={{
+        transform: partyMode ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform 0.3s ease-out'
+      }}
+    >
       <div className="absolute -inset-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(particleCount)].map((_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full animate-float"
@@ -28,23 +39,39 @@ function MotionLogo() {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: `${i * 0.2}s`,
-              animationDuration: `${3 + Math.random() * 2}s`
+              animationDuration: `${(3 + Math.random() * 2) * animationSpeed}s`
             }}
           />
         ))}
       </div>
 
       <div className="flex items-center gap-6 relative">
-        <div className="relative w-16 h-16">
+        <div 
+          className="relative w-16 h-16"
+          style={{
+            filter: partyMode ? 'hue-rotate(0deg) brightness(1.3)' : 'none',
+            animation: partyMode ? 'hueRotate 2s linear infinite' : 'none'
+          }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-violet-600/30 to-cyan-600/30 rounded-full blur-xl animate-morph" />
-          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s' }}>
+          <div className="absolute inset-0 animate-spin" style={{ animationDuration: partyMode ? '10s' : '20s' }}>
             <div className="absolute inset-0 border-2 border-transparent border-t-cyan-400/40 border-r-purple-400/40 rounded-full" />
           </div>
-          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+          <div className="absolute inset-0 animate-spin" style={{ animationDuration: partyMode ? '7.5s' : '15s', animationDirection: 'reverse' }}>
             <div className="absolute inset-2 border border-transparent border-b-pink-400/30 border-l-orange-400/30 rounded-full" />
           </div>
-          <div className="absolute inset-3 bg-gradient-to-br from-white to-white/80 rounded-full shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-            <div className="w-6 h-6 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full animate-pulse" />
+          <div 
+            className="absolute inset-3 bg-gradient-to-br from-white to-white/80 rounded-full shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500"
+            style={{
+              transform: partyMode ? 'scale(1.2)' : 'scale(1)'
+            }}
+          >
+            <div 
+              className="w-6 h-6 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full animate-pulse"
+              style={{
+                animationDuration: partyMode ? '0.5s' : '2s'
+              }}
+            />
           </div>
           <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ animationDuration: '3s' }} />
         </div>
@@ -88,14 +115,132 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
     handleRemoveVote,
   } = useDayVoting(restaurants)
 
+  // Easter Egg: Party Mode (Logo Click Counter)
+  const [partyMode, setPartyMode] = useState(false)
+  const [clickCount, setClickCount] = useState(0)
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleLogoClick = useCallback(() => {
+    setClickCount(prev => prev + 1)
+    
+    // Reset timer
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current)
+    }
+    
+    // Set a 2-second window for clicks
+    clickTimerRef.current = setTimeout(() => {
+      setClickCount(0)
+    }, 2000)
+  }, [])
+
+  useEffect(() => {
+    if (clickCount >= 7 && !partyMode) {
+      setPartyMode(true)
+      setClickCount(0)
+      
+      // Party mode lasts 5 seconds
+      setTimeout(() => {
+        setPartyMode(false)
+      }, 5000)
+    }
+  }, [clickCount, partyMode])
+
+  // Easter Egg: Konami Code
+  const [konamiActivated, setKonamiActivated] = useState(false)
+  const konamiSequence = useRef<string[]>([])
+  const KONAMI_CODE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      konamiSequence.current.push(e.key)
+      if (konamiSequence.current.length > KONAMI_CODE.length) {
+        konamiSequence.current.shift()
+      }
+      
+      if (JSON.stringify(konamiSequence.current) === JSON.stringify(KONAMI_CODE)) {
+        setKonamiActivated(true)
+        konamiSequence.current = []
+        
+        // Konami effect lasts 10 seconds
+        setTimeout(() => {
+          setKonamiActivated(false)
+        }, 10000)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Easter Egg: Console Message
+  useEffect(() => {
+    console.log(`
+%c
+███╗   ███╗ ██████╗ ████████╗██╗ ██████╗ ███╗   ██╗
+████╗ ████║██╔═══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║
+██╔████╔██║██║   ██║   ██║   ██║██║   ██║██╔██╗ ██║
+██║╚██╔╝██║██║   ██║   ██║   ██║██║   ██║██║╚██╗██║
+██║ ╚═╝ ██║╚██████╔╝   ██║   ██║╚██████╔╝██║ ╚████║
+╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+
+%c🚀 Welcome to the MOTION Tuesday Lab!
+%c👨‍💻 Built with ❤️  by Lars Oberhofer
+%c🎮 Try clicking the logo 7 times quickly...
+%c⌨️  Or try the Konami code: ↑↑↓↓←→←→BA
+`, 
+      'color: #8b5cf6; font-weight: bold;',
+      'color: #06b6d4; font-size: 14px;',
+      'color: #a78bfa; font-size: 12px;',
+      'color: #22d3ee; font-size: 12px;',
+      'color: #c084fc; font-size: 12px;'
+    );
+  }, [])
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current)
+      }
+    }
+  }, [])
+
   return (
     <>
       {/* Lunch Notes Drawer */}
       <LunchNotesDrawer />
       
-      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      <div 
+        className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950"
+        style={{
+          filter: konamiActivated ? 'brightness(1.2) saturate(1.5)' : 'none',
+          transition: 'filter 0.3s ease'
+        }}
+      >
+        {/* Konami Code Activation Banner */}
+        {konamiActivated && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-slideDown">
+            <div className="backdrop-blur-xl bg-gradient-to-r from-violet-500/30 to-cyan-500/30 border-2 border-white/20 rounded-2xl px-8 py-4 shadow-2xl">
+              <div className="flex items-center gap-4">
+                <span className="text-4xl animate-bounce">🎮</span>
+                <div>
+                  <p className="text-xl font-bold text-white">KONAMI CODE ACTIVATED!</p>
+                  <p className="text-sm text-white/80">Welcome to the secret club 🌟</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Background effects */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="fixed inset-0 overflow-hidden pointer-events-none"
+          style={{
+            filter: konamiActivated ? 'hue-rotate(180deg)' : 'none',
+            transition: 'filter 2s ease'
+          }}
+        >
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
           <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-3xl animate-pulse" />
@@ -108,7 +253,7 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
           
           <div className="relative container mx-auto px-6 py-8">
             <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-              <MotionLogo />
+              <MotionLogo partyMode={partyMode} onClick={handleLogoClick} />
               
               <div className="flex flex-col items-center lg:items-end gap-4">
                 <div className="flex items-center gap-6">
@@ -285,6 +430,22 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
           }
         }
         
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -100%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
+        
+        @keyframes hueRotate {
+          0% { filter: hue-rotate(0deg) brightness(1.3); }
+          100% { filter: hue-rotate(360deg) brightness(1.3); }
+        }
+        
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
@@ -302,6 +463,10 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
         .animate-gradient {
           background-size: 200% 200%;
           animation: gradient 3s ease infinite;
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.5s ease-out;
         }
       `}</style>
     </>
