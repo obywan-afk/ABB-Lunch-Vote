@@ -86,6 +86,9 @@ export default function Home() {
             url: r.url || undefined,
             status: r.status,
             rawSnippet: stripTiistaiHeader(r.rawSnippet),
+            fromCache: Boolean(r.fromCache),
+            fetchedForDate: r.dateKey,
+            statusNote: r.status?.note,
           }))
 
           setRestaurants(processedRestaurants)

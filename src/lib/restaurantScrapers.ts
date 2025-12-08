@@ -94,6 +94,43 @@ function unifyDietCodes(dietcodes?: string, properties?: string): string {
 }
 
 export class RestaurantScrapers {
+  // Basic HTML-to-text day slicer to avoid AI flakiness.
+  private static extractDaySectionFromHtml(html: string, targetFi: (typeof DAY_FI)[number]): string | null {
+    const markers = DAY_FI.join('|');
+    const normalized = html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+      .replace(/<h[1-6][^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\r/g, '')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+
+    const headerRe = new RegExp(`\\b(${markers})\\b[^\\n]*`, 'ig');
+    const headers: Array<{ day: (typeof DAY_FI)[number]; idx: number }> = [];
+    let m: RegExpExecArray | null;
+    while ((m = headerRe.exec(normalized)) !== null) {
+      headers.push({ day: m[1] as (typeof DAY_FI)[number], idx: m.index });
+    }
+    if (!headers.length) return null;
+
+    const targetIdx = headers.findIndex(h => h.day.toLowerCase() === targetFi.toLowerCase());
+    if (targetIdx === -1) return null;
+
+    const start = normalized.indexOf('\n', headers[targetIdx].idx);
+    const end = headers[targetIdx + 1]?.idx ?? normalized.length;
+    const slice = normalized.slice(start === -1 ? headers[targetIdx].idx : start, end).trim();
+
+    // Weed out obvious false positives (like opening hours)
+    const lines = slice.split('\n').map(s => s.trim()).filter(Boolean);
+    if (lines.length < 2) return null;
+
+    const body = lines.join('\n');
+    if (body.length < 40) return null;
+
+    return `--- ${targetFi} ---\n${body}`;
+  }
   
   private static async fetchWithRetry(url: string, retries = 3): Promise<string> {
     console.log(`🌐 Fetching: ${url}`)
@@ -799,6 +836,21 @@ export class RestaurantScrapers {
       
       // Limit to reasonable size for AI processing
       contentToProcess = contentToProcess.substring(0, 20000);
+
+      // Try deterministic day slice first (fast path, avoids AI flakiness)
+      const manualSlice = this.extractDaySectionFromHtml(contentToProcess, targetDay as (typeof DAY_FI)[number]);
+      if (manualSlice) {
+        const cleaned = this.cleanMenuText(manualSlice);
+        const success = cleaned.length > 40;
+        console.log(`✅ Manual extraction for Factory ${targetDay}: ${success ? 'SUCCESS' : 'FAILED'} (len=${cleaned.length})`);
+        return {
+          restaurantId: 'factory',
+          restaurantName: 'Factory Pitäjänmäki',
+          rawMenu: cleaned,
+          success,
+          error: success ? undefined : `Manual extraction too short for ${targetDay}`
+        };
+      }
       
       console.log(`📤 Sending ${contentToProcess.length} characters to AI for ${targetDay} menu extraction...`)
       
@@ -897,6 +949,21 @@ export class RestaurantScrapers {
 
       // Limit to reasonable size for AI processing
       contentToProcess = contentToProcess.substring(0, 20000);
+
+      // Try deterministic day slice first (fast path, avoids AI flakiness)
+      const manualSlice = this.extractDaySectionFromHtml(contentToProcess, targetDay as (typeof DAY_FI)[number]);
+      if (manualSlice) {
+        const cleaned = this.cleanMenuText(manualSlice);
+        const success = cleaned.length > 40;
+        console.log(`✅ Manual extraction for Ravintola Valimo ${targetDay}: ${success ? 'SUCCESS' : 'FAILED'} (len=${cleaned.length})`);
+        return {
+          restaurantId: 'ravintola-valimo',
+          restaurantName: 'Ravintola Valimo',
+          rawMenu: cleaned,
+          success,
+          error: success ? undefined : `Manual extraction too short for ${targetDay}`
+        };
+      }
 
       console.log(`📤 Sending ${contentToProcess.length} characters to AI for ${targetDay} menu extraction...`);
 

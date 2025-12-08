@@ -19,6 +19,14 @@ export function MotionRestaurantCard({
   isVotingOpen,
   index 
 }: MotionRestaurantCardProps) {
+  const isCache = Boolean(restaurant.fromCache);
+  const menuDateLabel = (() => {
+    if (!restaurant.fetchedForDate) return null;
+    const safeDate = new Date(`${restaurant.fetchedForDate}T12:00:00`);
+    if (isNaN(safeDate.getTime())) return restaurant.fetchedForDate;
+    return safeDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  })();
+
   return (
     <div 
       className="relative group h-full"
@@ -29,107 +37,108 @@ export function MotionRestaurantCard({
       }}
     >
       <div className={cn(
-        "absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl pointer-events-none",
-        isWinner && "opacity-100 animate-pulse",
-        hasVotedForThis ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-violet-500 to-cyan-500"
-      )} />
-      
-      <div className={cn(
-        "relative backdrop-blur-xl rounded-2xl border transition-all duration-500",
+        "relative flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300 will-change-transform backdrop-blur-lg",
         isWinner 
-          ? "bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30" 
+          ? "border-cyan-300/60 bg-white/10 shadow-[0_25px_80px_-50px_rgba(0,0,0,0.8)] hover:-translate-y-1 hover:shadow-[0_35px_120px_-60px_rgba(56,189,248,0.4)]"
           : hasVotedForThis 
-            ? "bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/30"
-            : "bg-white/10 border-white/20 hover:bg-white/20",
-        "shadow-2xl hover:shadow-3xl hover:scale-[1.02]",
-        "flex flex-col"
+            ? "border-emerald-300/50 bg-white/5 shadow-[0_25px_80px_-60px_rgba(0,0,0,0.8)] hover:-translate-y-1"
+            : "border-white/10 bg-white/5 shadow-[0_25px_80px_-70px_rgba(0,0,0,0.8)] hover:-translate-y-1 hover:shadow-[0_30px_120px_-80px_rgba(14,165,233,0.4)]",
       )}>
         {isWinner && (
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-4 py-1 rounded-full text-xs font-bold shadow-lg animate-bounce">
-              👑 WINNER
-            </div>
+          <div className="absolute left-0 top-0 rounded-br-xl rounded-tl-2xl bg-gradient-to-r from-cyan-400 to-violet-400 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-900 shadow-sm">
+            Top pick
           </div>
         )}
         
         {restaurant.votes > 0 && (
-          <div className="absolute -top-3 -right-3 z-10">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full blur animate-pulse" />
-              <div className="relative bg-gradient-to-r from-violet-600 to-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-xl">
-                {restaurant.votes}
-              </div>
-            </div>
+          <div className="absolute right-3 top-3 flex items-center justify-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur">
+            {restaurant.votes} {restaurant.votes === 1 ? 'vote' : 'votes'}
           </div>
         )}
         
-        <div className="p-6 flex flex-col flex-grow">
-          <div className="mb-4">
-            <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+        <div className="flex flex-grow flex-col gap-4 p-6">
+          <div className="space-y-2">
+            <h3 className="flex items-center gap-2 text-xl font-bold text-white">
               {restaurant.name}
               {restaurant.url && (
                 <a 
                   href={restaurant.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm text-white transition hover:border-white/30 hover:bg-white/20"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <span className="text-sm">🔗</span>
+                  <span aria-hidden="true">↗</span>
+                  <span className="sr-only">Open menu</span>
                 </a>
               )}
             </h3>
-            <p className="text-white/60 text-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+            <p className="flex items-center gap-2 text-sm text-white/70">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               {restaurant.location || 'Location TBD'}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80">
+                {isCache ? 'Cached' : 'Live'}
+              </span>
+              {menuDateLabel && (
+                <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                  Menu {menuDateLabel}
+                </span>
+              )}
+              {restaurant.statusNote && (
+                <span className="rounded-full border border-amber-300/40 bg-amber-300/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-100">
+                  {restaurant.statusNote}
+                </span>
+              )}
+            </div>
           </div>
           
-          <div className="mb-4 flex-grow">
+          <div className="flex-grow">
             {restaurant.parsedMenu ? (
-              <div className="space-y-2 text-white/80 text-sm">
+              <div className="space-y-2 text-sm text-white/80">
                 {restaurant.parsedMenu.split('\n').map((line: string, i: number) => (
                   <div 
                     key={i} 
-                    className="pl-4 border-l-2 border-cyan-400/20 hover:border-cyan-400/50 transition-colors"
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white/90"
                   >
                     {line}
                   </div>
                 ))}
               </div>
             ) : restaurant.rawMenu ? (
-              <div className="text-white/60 text-sm italic">
+              <div className="text-sm italic text-white/70">
                 {restaurant.rawMenu}
               </div>
             ) : (
-              <div className="text-white/40 text-sm italic">
+              <div className="text-sm italic text-white/40">
                 Menu information unavailable
               </div>
             )}
           </div>
           
-          <div className="mt-4">
+          <div className="mt-2">
             {isVotingOpen ? (
               hasVotedForThis ? (
-                <div className="flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/30">
-                  <span className="text-green-400 font-semibold">✓ Your Choice</span>
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-300/40 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">
+                  <span>✓ Your choice</span>
                 </div>
               ) : (
                 <button
                   onClick={onVote}
                   disabled={userHasVoted}
                   className={cn(
-                    "w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 transform",
+                    "w-full rounded-xl px-4 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400",
                     userHasVoted
-                      ? "bg-white/5 border border-white/10 text-white/40 cursor-not-allowed"
-                      : "bg-gradient-to-r from-violet-500 to-cyan-500 text-white hover:from-violet-600 hover:to-cyan-600 hover:scale-105 shadow-lg hover:shadow-xl"
+                      ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/40"
+                      : "border border-cyan-400/80 bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-[0_20px_50px_-30px_rgba(59,130,246,0.8)] hover:from-indigo-400 hover:to-cyan-300"
                   )}
                 >
-                  {userHasVoted ? "Already Voted" : "Cast Vote"}
+                  {userHasVoted ? "Already voted" : "Cast vote"}
                 </button>
               )
             ) : (
-              <div className="text-center py-3 text-white/40 text-sm">
+              <div className="rounded-xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/60">
                 Voting closed
               </div>
             )}

@@ -52,14 +52,15 @@ model VoteHistory {
 }
 
 model User {
-  id         String      @id @default(cuid())
-  email      String?     @unique
-  name       String?
-  sessionId  String      @unique
-  votes      Vote[]
-  lunchNotes LunchNote[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String            @id @default(cuid())
+  email           String?           @unique
+  name            String?
+  sessionId       String            @unique
+  votes           Vote[]
+  lunchNotes      LunchNote[]
+  ticTacToePlayers TicTacToePlayer[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 model LunchNote {
@@ -100,4 +101,49 @@ model MenuCache {
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   
   @@unique([restaurantId, date, language], name: "restaurantId_date_language")
+}
+
+model TicTacToeMatch {
+  id           String            @id @default(cuid())
+  dateKey      String            @db.VarChar(10)
+  board        String            @default("---------") // 9 chars, '-' means empty
+  currentTurn  String?           @db.VarChar(1)        // 'X' or 'O'
+  status       String            @default("waiting")   // waiting | active | finished
+  winnerSymbol String?           @db.VarChar(1)
+  winnerName   String?
+  winningLine  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  players      TicTacToePlayer[]
+  moves        TicTacToeMove[]
+
+  @@index([dateKey])
+}
+
+model TicTacToePlayer {
+  id       String   @id @default(cuid())
+  matchId  String
+  userId   String
+  userName String?
+  symbol   String   @db.VarChar(1) // 'X' or 'O'
+  joinedAt DateTime @default(now())
+  match    TicTacToeMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moves    TicTacToeMove[]
+
+  @@unique([matchId, symbol])
+  @@unique([matchId, userId])
+}
+
+model TicTacToeMove {
+  id        String   @id @default(cuid())
+  matchId   String
+  playerId  String
+  position  Int
+  symbol    String   @db.VarChar(1)
+  createdAt DateTime @default(now())
+  match     TicTacToeMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player    TicTacToePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, position])
 }

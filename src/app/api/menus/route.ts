@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
   const dateKey = targetDayFi 
     ? (isToday ? todayKeyEuropeHelsinki() : dateForNextWeekdayFi(targetDayFi))
     : undefined
+  const effectiveDateKey = dateKey ?? todayKeyEuropeHelsinki()
 
   console.log(`🚀 Processing menus for language: ${language} (fresh=${forceFresh}, day=${targetDayFi ?? 'auto'}, dateKey=${dateKey ?? 'today'})`)
 
@@ -67,19 +68,20 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const processedMenus: Array<{
-      id: string
-      name: string
-      location: string | null
-      description: string | null
-      rawSnippet?: string
-      parsedMenu?: string
-      fromCache: boolean
-      error?: boolean
-      status: {
-        scraped: boolean
-        parse: 'ok' | 'rate_limited' | 'failed' | 'skipped'
-        note: string
+  const processedMenus: Array<{
+    id: string
+    name: string
+    location: string | null
+    description: string | null
+    rawSnippet?: string
+    parsedMenu?: string
+    fromCache: boolean
+    dateKey: string
+    error?: boolean
+    status: {
+      scraped: boolean
+      parse: 'ok' | 'rate_limited' | 'failed' | 'skipped'
+      note: string
       }
     }> = []
 
@@ -105,12 +107,13 @@ export async function GET(request: NextRequest) {
           rawSnippet: result.rawMenu?.slice(0,160),
           parsedMenu: result.parsedMenu,
           fromCache: !forceFresh && result.fromCache,
+          dateKey: effectiveDateKey,
           status: {
             scraped: true,
             parse: 'ok',
             note: result.fromCache
-              ? `Loaded from DB cache (${dateKey})`
-              : `Live scraped & cached (${dateKey})`
+              ? `Loaded from DB cache (${effectiveDateKey})`
+              : `Live scraped & cached (${effectiveDateKey})`
           }
         })
       } catch (e) {
@@ -121,6 +124,7 @@ export async function GET(request: NextRequest) {
           location: r.location,
           description: r.description,
           fromCache: false,
+          dateKey: effectiveDateKey,
           error: true,
           status: { scraped: false, parse: 'failed', note: 'Unexpected error occurred' },
         })

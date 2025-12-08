@@ -9,7 +9,9 @@ export interface Restaurant {
   votes: number;
     rawSnippet?: string;
   status?: RestaurantStatus;
-
+  fromCache?: boolean;
+  fetchedForDate?: string;
+  statusNote?: string;
 }
 
 export type ParseStatus = 'ok' | 'rate_limited' | 'failed' | 'skipped';
