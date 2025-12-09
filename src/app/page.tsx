@@ -12,6 +12,16 @@ type Language = 'en' | 'fi'
 type DevDay = '' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 type DaySelection = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 
+const DAY_BY_INDEX: Record<number, DaySelection | undefined> = {
+  0: 'sunday',
+  1: 'monday',
+  2: 'tuesday',
+  3: 'wednesday',
+  4: 'thursday',
+  5: 'friday',
+  6: 'saturday',
+}
+
 // Remove a leading "Tiistai" line (optionally wrapped with dashes)
 function stripTiistaiHeader(text?: string) {
   if (!text) return text;
@@ -29,33 +39,13 @@ export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [language, setLanguage] = useState<Language>('en')
-  const [selectedDay, setSelectedDay] = useState<DaySelection>('tuesday')
+  const [selectedDay, setSelectedDay] = useState<DaySelection>(() => {
+    const currentDay = new Date().getDay()
+    return DAY_BY_INDEX[currentDay] ?? 'tuesday'
+  })
   const [aiLimited, setAiLimited] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
-
-  const dayByIndex: Record<number, DaySelection | undefined> = {
-    0: 'sunday',
-    1: 'monday',
-    2: 'tuesday',
-    3: 'wednesday',
-    4: 'thursday',
-    5: 'friday',
-    6: 'saturday',
-  }
-
-  // Get current day and set default selection
-  useEffect(() => {
-    const currentDay = new Date().getDay()
-    const today = dayByIndex[currentDay]
-    
-    if (today) {
-      setSelectedDay(today)
-    } else {
-      // Fallback to Tuesday (shouldn't happen since we cover all days 0-6)
-      setSelectedDay('tuesday')
-    }
-  }, [])
 
   useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('abb-lunch-vote-auth') === 'true'
