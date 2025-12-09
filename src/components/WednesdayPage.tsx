@@ -7,6 +7,8 @@ import { useDayVoting } from '@/hooks/useDayVoting'
 import { ABBNeuralRestaurantCard } from '@/components/cards/ABBNeuralRestaurantCard'
 import { LunchNotesDrawer } from '@/components/LunchNotesDrawer'
 import { TIP_JAR_URL } from '@/lib/config'
+import { useLunchInsights, getHostFromUrl } from '@/hooks/useLunchInsights'
+import { TicTacToePanel } from '@/components/games/TicTacToePanel'
 
 type Language = 'en' | 'fi'
 
@@ -108,6 +110,7 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
     handleVote,
     handleRemoveVote,
   } = useDayVoting(restaurants)
+  const { weatherInfo, dailyHighlight, infoLoading, refresh: refreshInsights } = useLunchInsights()
 
   return (
     <>
@@ -186,6 +189,131 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
         </header>
 
         <main className="relative container mx-auto px-6 py-12">
+          {/* Environmental & highlight feed */}
+          <section className="mb-12 grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
+            <div className="backdrop-blur-xl rounded border-2 border-cyan-400/30 bg-slate-900/70 p-6 shadow-lg shadow-cyan-500/10">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70 font-mono">
+                    ENVIRONMENT FEED
+                  </p>
+                  <p className="text-2xl font-bold text-white mt-2 font-orbitron">
+                    {weatherInfo
+                      ? `${weatherInfo.temperature}°C ${weatherInfo.description}`
+                      : infoLoading
+                        ? 'SCANNING...'
+                        : 'NO INPUT'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => refreshInsights()}
+                  className="px-4 py-2 rounded border border-cyan-400/50 text-cyan-200 font-mono text-xs tracking-widest hover:border-cyan-300 hover:text-white transition"
+                >
+                  REFRESH
+                </button>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-3 text-sm text-cyan-100/80 font-mono">
+                <div className="rounded border border-cyan-400/20 bg-slate-900/60 p-3">
+                  <p className="text-[10px] tracking-widest text-cyan-300/60">
+                    HIGH / LOW
+                  </p>
+                  <p className="text-lg font-bold">
+                    {typeof weatherInfo?.high === 'number'
+                      ? `${weatherInfo.high}°`
+                      : '—'}
+                    {' / '}
+                    {typeof weatherInfo?.low === 'number'
+                      ? `${weatherInfo.low}°`
+                      : '—'}
+                  </p>
+                </div>
+                <div className="rounded border border-cyan-400/20 bg-slate-900/60 p-3">
+                  <p className="text-[10px] tracking-widest text-cyan-300/60">
+                    WIND
+                  </p>
+                  <p className="text-lg font-bold">
+                    {typeof weatherInfo?.wind === 'number'
+                      ? `${weatherInfo.wind} m/s`
+                      : '—'}
+                  </p>
+                </div>
+                <div className="rounded border border-cyan-400/20 bg-slate-900/60 p-3">
+                  <p className="text-[10px] tracking-widest text-cyan-300/60">
+                    PRECIP %
+                  </p>
+                  <p className="text-lg font-bold">
+                    {typeof weatherInfo?.precipitation === 'number'
+                      ? `${weatherInfo.precipitation}%`
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+              {weatherInfo?.weekForecast && (
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {weatherInfo.weekForecast.slice(0, 6).map((day) => (
+                    <div
+                      key={day.day}
+                      className="rounded border border-cyan-400/10 bg-slate-900/40 p-3 text-center"
+                    >
+                      <p className="text-[11px] tracking-widest text-cyan-200/70 font-mono">
+                        {day.day}
+                      </p>
+                      <p className="text-xl font-bold text-white">
+                        {day.high}°
+                      </p>
+                      <p className="text-xs text-cyan-100/60">{day.low}°</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="backdrop-blur-xl rounded border-2 border-green-400/30 bg-slate-900/80 p-6 flex flex-col gap-4 shadow-lg shadow-green-500/10">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-green-400/80 font-mono">
+                    SIGNAL OF THE DAY
+                  </p>
+                  <p className="text-sm text-green-100/70">
+                    Latest inspiration from design uplink.
+                  </p>
+                </div>
+                <div className="text-[10px] uppercase tracking-widest text-green-300/60 font-mono">
+                  {dailyHighlight?.source || (infoLoading ? 'FETCHING' : 'LOCAL')}
+                </div>
+              </div>
+              {dailyHighlight ? (
+                dailyHighlight.url ? (
+                  <a
+                    href={dailyHighlight.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group rounded border border-green-400/30 bg-gradient-to-br from-slate-900/70 to-slate-900/40 p-4 transition hover:border-green-400/70"
+                  >
+                    <p className="text-base font-semibold text-white leading-relaxed">
+                      {dailyHighlight.title}
+                    </p>
+                    {getHostFromUrl(dailyHighlight.url) && (
+                      <p className="mt-2 text-xs text-green-200/60 font-mono">
+                        {getHostFromUrl(dailyHighlight.url)}
+                      </p>
+                    )}
+                  </a>
+                ) : (
+                  <div className="rounded border border-green-400/30 bg-gradient-to-br from-slate-900/70 to-slate-900/40 p-4">
+                    <p className="text-base font-semibold text-white leading-relaxed">
+                      {dailyHighlight.title}
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className="rounded border border-green-400/20 bg-slate-900/60 p-4 text-center text-sm text-green-200/60 font-mono">
+                  {infoLoading ? 'Booting highlight module...' : 'No signal detected.'}
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* AI Limited warning */}
           {aiLimited && (
             <div className="mb-8 p-4 rounded bg-orange-500/10 border-2 border-orange-500/50 text-orange-400">
@@ -252,6 +380,9 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
               ))
             )}
           </div>
+
+          {/* Mini game */}
+          <TicTacToePanel />
         </main>
 
         {/* Footer */}

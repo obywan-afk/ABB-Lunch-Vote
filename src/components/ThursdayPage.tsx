@@ -7,6 +7,8 @@ import { useDayVoting } from '@/hooks/useDayVoting'
 import { RetroRestaurantCard } from '@/components/cards/RetroRestaurantCard'
 import { LunchNotesDrawer } from '@/components/LunchNotesDrawer'
 import { TIP_JAR_URL } from '@/lib/config'
+import { useLunchInsights, getHostFromUrl } from '@/hooks/useLunchInsights'
+import { TicTacToePanel } from '@/components/games/TicTacToePanel'
 
 type Language = 'en' | 'fi'
 
@@ -77,6 +79,7 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
     handleVote,
     handleRemoveVote,
   } = useDayVoting(restaurants)
+  const { weatherInfo, dailyHighlight, infoLoading, refresh: refreshInsights } = useLunchInsights()
 
   return (
     <>
@@ -175,6 +178,134 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
         </header>
 
         <main className="relative container mx-auto px-6 py-12 z-10">
+          {/* Retro telemetry & highlight */}
+          <section className="mb-12 grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-pink-500/40 bg-black/50 p-6 backdrop-blur-lg">
+              <div className="absolute inset-0 opacity-20">
+                <div className="h-full w-full bg-gradient-to-br from-pink-900/40 via-purple-900/40 to-cyan-900/40" />
+              </div>
+              <div className="relative flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-mono tracking-[0.4em] text-pink-300/80 uppercase">
+                    WEATHER TRACKING
+                  </p>
+                  <p className="mt-2 text-3xl font-black italic text-white">
+                    {weatherInfo
+                      ? `${weatherInfo.temperature}°C ${weatherInfo.description}`
+                      : infoLoading
+                        ? 'Loading feed...'
+                        : 'No data yet'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => refreshInsights()}
+                  className="px-4 py-2 font-mono text-xs tracking-[0.3em] uppercase border border-cyan-400/40 text-cyan-200 rounded hover:text-white hover:border-cyan-300 transition"
+                >
+                  REFRESH
+                </button>
+              </div>
+              <div className="relative mt-6 grid gap-4 sm:grid-cols-3 text-center">
+                <div className="rounded-xl border border-pink-500/40 bg-black/40 px-4 py-3">
+                  <p className="text-[10px] font-mono tracking-[0.35em] text-pink-200/70">
+                    HIGH / LOW
+                  </p>
+                  <p className="text-2xl font-bold text-white">
+                    {typeof weatherInfo?.high === 'number'
+                      ? `${weatherInfo.high}°`
+                      : '—'}
+                    {' / '}
+                    {typeof weatherInfo?.low === 'number'
+                      ? `${weatherInfo.low}°`
+                      : '—'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-pink-500/40 bg-black/40 px-4 py-3">
+                  <p className="text-[10px] font-mono tracking-[0.35em] text-pink-200/70">
+                    WIND
+                  </p>
+                  <p className="text-2xl font-bold text-white">
+                    {typeof weatherInfo?.wind === 'number'
+                      ? `${weatherInfo.wind} m/s`
+                      : '—'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-pink-500/40 bg-black/40 px-4 py-3">
+                  <p className="text-[10px] font-mono tracking-[0.35em] text-pink-200/70">
+                    RAIN %
+                  </p>
+                  <p className="text-2xl font-bold text-white">
+                    {typeof weatherInfo?.precipitation === 'number'
+                      ? `${weatherInfo.precipitation}%`
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+              {weatherInfo?.weekForecast && (
+                <div className="relative mt-6 flex gap-2 overflow-x-auto pb-2">
+                  {weatherInfo.weekForecast.map((day) => (
+                    <div
+                      key={day.day}
+                      className="min-w-[70px] rounded-lg border border-cyan-400/30 bg-black/30 px-3 py-2 text-center"
+                    >
+                      <p className="text-[11px] font-mono tracking-[0.2em] text-cyan-200/70 uppercase">
+                        {day.day}
+                      </p>
+                      <p className="text-lg font-bold text-white">
+                        {day.high}°
+                      </p>
+                      <p className="text-xs text-cyan-100/60">{day.low}°</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="rounded-2xl border-2 border-cyan-500/40 bg-black/40 p-6 backdrop-blur-lg flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-mono tracking-[0.4em] text-cyan-300 uppercase">
+                    FEATURED SIGNAL
+                  </p>
+                  <p className="text-sm text-cyan-200/80">
+                    Neon-lit highlight from the lunch lab wires.
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono tracking-[0.4em] text-pink-200/70">
+                  {dailyHighlight?.source || (infoLoading ? 'SCANNING' : 'OFFLINE')}
+                </div>
+              </div>
+              {dailyHighlight ? (
+                dailyHighlight.url ? (
+                  <a
+                    href={dailyHighlight.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group rounded-xl border border-cyan-500/50 bg-gradient-to-br from-purple-900/40 to-pink-900/30 p-4 transition hover:border-cyan-300"
+                  >
+                    <p className="text-lg font-semibold text-white italic leading-relaxed">
+                      {dailyHighlight.title}
+                    </p>
+                    {getHostFromUrl(dailyHighlight.url) && (
+                      <p className="mt-2 text-xs font-mono tracking-[0.3em] text-cyan-200/70">
+                        {getHostFromUrl(dailyHighlight.url)}
+                      </p>
+                    )}
+                  </a>
+                ) : (
+                  <div className="rounded-xl border border-cyan-500/40 bg-gradient-to-br from-purple-900/40 to-pink-900/30 p-4">
+                    <p className="text-lg font-semibold text-white italic leading-relaxed">
+                      {dailyHighlight.title}
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className="rounded-xl border border-cyan-500/30 bg-black/40 p-4 text-center text-sm font-mono tracking-[0.3em] text-cyan-200/70">
+                  {infoLoading ? 'Dialing in...' : 'No broadcast detected.'}
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* AI Limited warning with VHS style */}
           {aiLimited && (
             <div className="mb-8 rounded bg-black/60 border-2 border-yellow-500/60 p-4 backdrop-blur-md">
@@ -240,6 +371,9 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
               ))
             )}
           </div>
+
+          {/* Mini game */}
+          <TicTacToePanel />
         </main>
 
         {/* Footer with VHS timestamp */}
