@@ -41,14 +41,19 @@ async function ensureUser(userName: string) {
   return user
 }
 
-async function loadMatch(matchId?: string, dateKey?: string) {
+async function cleanupOldMatches() {
+  const today = getCurrentDate()
+  // Hard reset: drop all matches from previous days so the board feels fresh
+  await prisma.ticTacToeMatch.deleteMany({
+    where: {
+      dateKey: { not: today },
+    },
+  })
+}
+
+async function loadMatchById(matchId: string) {
   return prisma.ticTacToeMatch.findFirst({
-    where: matchId
-      ? { id: matchId }
-      : {
-          dateKey: dateKey || getCurrentDate(),
-        },
-    orderBy: { createdAt: 'desc' },
+    where: { id: matchId },
     include: {
       players: true,
       moves: {
@@ -58,28 +63,18 @@ async function loadMatch(matchId?: string, dateKey?: string) {
   })
 }
 
-async function getOrCreateDailyMatch() {
+async function loadTodaysMatches() {
   const dateKey = getCurrentDate()
-  let match = await loadMatch(undefined, dateKey)
-
-  if (!match) {
-    match = await prisma.ticTacToeMatch.create({
-      data: {
-        dateKey,
-        board: EMPTY_BOARD,
-        status: 'waiting',
-        currentTurn: 'X',
+  return prisma.ticTacToeMatch.findMany({
+    where: { dateKey },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      players: true,
+      moves: {
+        orderBy: { createdAt: 'asc' },
       },
-      include: {
-        players: true,
-        moves: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
-    })
-  }
-
-  return match
+    },
+  })
 }
 
 function serializeMatch(match: any) {
@@ -113,12 +108,13 @@ function serializeMatch(match: any) {
 
 export async function GET() {
   try {
-    const match = await getOrCreateDailyMatch()
-    return NextResponse.json({ match: serializeMatch(match) })
+    await cleanupOldMatches()
+    const matches = await loadTodaysMatches()
+    return NextResponse.json({ matches: matches.map(serializeMatch) })
   } catch (error) {
-    console.error('Error fetching tic tac toe match:', error)
+    console.error('Error fetching tic tac toe matches:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch tic tac toe match' },
+      { error: 'Failed to fetch tic tac toe matches' },
       { status: 500 },
     )
   }
@@ -136,43 +132,90 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}))
     const preferredSymbol = body?.preferredSymbol as 'X' | 'O' | undefined
+    const matchId = body?.matchId as string | undefined
 
-    const [match, user] = await Promise.all([
-      getOrCreateDailyMatch(),
-      ensureUser(userName),
-    ])
+    const user = await ensureUser(userName)
+    const dateKey = getCurrentDate()
 
-    const existingPlayer = match.players.find(
-      (p: any) => p.userId === user.id,
-    )
-    if (existingPlayer) {
-      return NextResponse.json({ match: serializeMatch(match) })
-    }
+    // Join existing match for today if matchId is provided
+    if (matchId) {
+      const match = await loadMatchById(matchId)
 
-    if (match.players.length >= 2) {
-      return NextResponse.json(
-        { error: 'Match already has two players' },
-        { status: 409 },
+      if (!match || match.dateKey !== dateKey) {
+        return NextResponse.json(
+          { error: 'Match not found or not from today' },
+          { status: 404 },
+        )
+      }
+
+      const existingPlayer = match.players.find(
+        (p: any) => p.userId === user.id,
       )
+      if (existingPlayer) {
+        return NextResponse.json({ match: serializeMatch(match) })
+      }
+
+      if (match.status === 'finished' || match.status === 'abandoned') {
+        return NextResponse.json(
+          { error: 'Cannot join a finished or abandoned match' },
+          { status: 400 },
+        )
+      }
+
+      if (match.players.length >= 2) {
+        return NextResponse.json(
+          { error: 'Match already has two players' },
+          { status: 409 },
+        )
+      }
+
+      const takenSymbols = match.players.map((p: any) => p.symbol)
+      const availableSymbols = ['X', 'O'].filter(
+        (sym) => !takenSymbols.includes(sym),
+      )
+      const symbol =
+        preferredSymbol && availableSymbols.includes(preferredSymbol)
+          ? preferredSymbol
+          : availableSymbols[0] || 'X'
+
+      const nextStatus =
+        match.players.length + 1 >= 2 ? 'active' : ('waiting' as const)
+
+      const updated = await prisma.ticTacToeMatch.update({
+        where: { id: match.id },
+        data: {
+          status: nextStatus,
+          currentTurn: match.currentTurn || 'X',
+          players: {
+            create: {
+              userId: user.id,
+              userName: user.name || userName,
+              symbol,
+            },
+          },
+        },
+        include: {
+          players: true,
+          moves: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      })
+
+      return NextResponse.json({ match: serializeMatch(updated) })
     }
 
-    const takenSymbols = match.players.map((p: any) => p.symbol)
-    const availableSymbols = ['X', 'O'].filter(
-      (sym) => !takenSymbols.includes(sym),
-    )
-    const symbol =
-      preferredSymbol && availableSymbols.includes(preferredSymbol)
-        ? preferredSymbol
-        : availableSymbols[0] || 'X'
+    // Otherwise create a brand new match for today
+    const symbol = preferredSymbol && ['X', 'O'].includes(preferredSymbol)
+      ? preferredSymbol
+      : 'X'
 
-    const nextStatus =
-      match.players.length + 1 >= 2 ? 'active' : ('waiting' as const)
-
-    const updated = await prisma.ticTacToeMatch.update({
-      where: { id: match.id },
+    const created = await prisma.ticTacToeMatch.create({
       data: {
-        status: nextStatus,
-        currentTurn: match.currentTurn || 'X',
+        dateKey,
+        board: EMPTY_BOARD,
+        status: 'waiting',
+        currentTurn: 'X',
         players: {
           create: {
             userId: user.id,
@@ -189,11 +232,11 @@ export async function POST(request: Request) {
       },
     })
 
-    return NextResponse.json({ match: serializeMatch(updated) })
+    return NextResponse.json({ match: serializeMatch(created) })
   } catch (error) {
-    console.error('Error joining tic tac toe match:', error)
+    console.error('Error joining/creating tic tac toe match:', error)
     return NextResponse.json(
-      { error: 'Failed to join match' },
+      { error: 'Failed to join or create match' },
       { status: 500 },
     )
   }
@@ -210,11 +253,28 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { action = 'move', position, matchId } = body
+    const { action = 'move', position, matchId } = body as {
+      action?: 'move' | 'reset' | 'abandon'
+      position?: number
+      matchId?: string
+    }
+
+    if (!matchId) {
+      return NextResponse.json(
+        { error: 'matchId is required' },
+        { status: 400 },
+      )
+    }
 
     const user = await ensureUser(userName)
-    const match =
-      (await loadMatch(matchId)) || (await getOrCreateDailyMatch())
+    const match = await loadMatchById(matchId)
+
+    if (!match) {
+      return NextResponse.json(
+        { error: 'Match not found' },
+        { status: 404 },
+      )
+    }
 
     const player = match.players.find((p: any) => p.userId === user.id)
     if (!player) {
@@ -257,7 +317,33 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ match: serializeMatch(reset) })
     }
 
-    if (!Number.isInteger(position) || position < 0 || position > 8) {
+    if (action === 'abandon') {
+      if (match.status === 'finished' || match.status === 'abandoned') {
+        return NextResponse.json({ match: serializeMatch(match) })
+      }
+
+      const abandoned = await prisma.ticTacToeMatch.update({
+        where: { id: match.id },
+        data: {
+          status: 'abandoned',
+          currentTurn: null,
+          winnerName: null,
+          winnerSymbol: null,
+          winningLine: null,
+        },
+        include: {
+          players: true,
+          moves: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      })
+
+      return NextResponse.json({ match: serializeMatch(abandoned) })
+    }
+
+    // Default action: place a move
+    if (!Number.isInteger(position) || position! < 0 || position! > 8) {
       return NextResponse.json(
         { error: 'Position must be between 0 and 8' },
         { status: 400 },
@@ -279,14 +365,14 @@ export async function PATCH(request: Request) {
     }
 
     const boardArray = match.board.split('')
-    if (boardArray[position] !== '-') {
+    if (boardArray[position!] !== '-') {
       return NextResponse.json(
         { error: 'Cell already taken' },
         { status: 409 },
       )
     }
 
-    boardArray[position] = player.symbol
+    boardArray[position!] = player.symbol
     const evaluation = evaluateBoard(boardArray.join(''))
     const hasSpotsLeft = boardArray.includes('-')
 
@@ -304,7 +390,7 @@ export async function PATCH(request: Request) {
         winningLine: evaluation ? evaluation.winningLine.join(',') : null,
         moves: {
           create: {
-            position,
+            position: position!,
             symbol: player.symbol,
             playerId: player.id,
           },

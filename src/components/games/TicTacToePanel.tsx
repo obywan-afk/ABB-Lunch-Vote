@@ -4,22 +4,43 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTicTacToe } from '@/hooks/useTicTacToe'
 import { cn } from '@/lib/utils'
 
+function formatTimeAgo(isoDate?: string | null) {
+  if (!isoDate) return ''
+  const date = new Date(isoDate)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const diffMs = Date.now() - date.getTime()
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHrs = Math.floor(diffMin / 60)
+
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin} min ago`
+  if (diffHrs < 6) return `${diffHrs} h ago`
+  return 'earlier today'
+}
+
 export function TicTacToePanel() {
   const {
-    match,
+    matches,
+    activeMatch,
+    setActiveMatchId,
     cells,
     loading,
     mutating,
     error,
     setError,
     userName,
-    joinGame,
+    joinNewMatch,
+    joinExistingMatch,
     makeMove,
     resetMatch,
+    abandonMatch,
     refresh,
   } = useTicTacToe()
 
   const [localUserName, setLocalUserName] = useState<string | null>(userName)
+  const [isOpen, setIsOpen] = useState(false)
   const isBusy = loading || mutating
 
   useEffect(() => {
@@ -32,253 +53,409 @@ export function TicTacToePanel() {
     }
   }, [userName])
 
+  const myPlayer = useMemo(
+    () =>
+      activeMatch?.players.find((p) => p.userName === localUserName) || null,
+    [activeMatch, localUserName],
+  )
+
   const winningLine = useMemo(
     () =>
-      match?.winningLine
-        ? match.winningLine.split(',').map((v: string) => Number(v))
+      activeMatch?.winningLine
+        ? activeMatch.winningLine.split(',').map((v: string) => Number(v))
         : [],
-    [match?.winningLine],
+    [activeMatch?.winningLine],
   )
-
-  const myPlayer = useMemo(
-    () => match?.players.find((p) => p.userName === localUserName),
-    [localUserName, match?.players],
-  )
-
-  const availableSymbols = useMemo(() => {
-    if (!match) return ['X', 'O']
-    const taken = match.players.map((p) => p.symbol)
-    return ['X', 'O'].filter((sym) => !taken.includes(sym))
-  }, [match])
 
   const isMyTurn =
-    match?.status === 'active' &&
+    activeMatch?.status === 'active' &&
     !!myPlayer &&
-    match.currentTurn === myPlayer.symbol
+    activeMatch.currentTurn === myPlayer.symbol
 
-  const statusCopy = useMemo(() => {
-    if (!match) return 'Loading game...'
-    if (match.status === 'waiting') {
-      return 'Waiting for players to join'
-    }
-    if (match.status === 'active') {
-      return isMyTurn
-        ? 'Your move—drop a mark'
-        : `${match.currentTurn} to play`
-    }
-    if (match.winnerSymbol) {
-      return `${match.winnerSymbol} wins`
-    }
-    return 'Draw game'
-  }, [isMyTurn, match])
+  const availableSymbolsForNew = useMemo(() => ['X', 'O'], [])
+
+  const myMatches = useMemo(
+    () =>
+      matches.filter((m) =>
+        m.players.some((p) => p.userName === localUserName),
+      ),
+    [matches, localUserName],
+  )
+
+  const myTurnCount = useMemo(
+    () =>
+      myMatches.filter((m) => {
+        const me = m.players.find((p) => p.userName === localUserName)
+        if (!me) return false
+        return m.status === 'active' && m.currentTurn === me.symbol
+      }).length,
+    [myMatches, localUserName],
+  )
+
+  const waitingForOpponentCount = useMemo(
+    () => myMatches.filter((m) => m.status === 'waiting').length,
+    [myMatches],
+  )
 
   const handleCellClick = (index: number) => {
-    if (!match || !myPlayer || mutating) return
-    if (match.status !== 'active') return
+    if (!activeMatch || !myPlayer || mutating) return
+    if (activeMatch.status !== 'active') return
     if (cells[index] !== '-') return
-    if (match.currentTurn && match.currentTurn !== myPlayer.symbol) return
-    makeMove(index)
+    if (
+      activeMatch.currentTurn &&
+      activeMatch.currentTurn !== myPlayer.symbol
+    ) {
+      return
+    }
+    void makeMove(index)
   }
 
-  return (
-    <section className="mt-12">
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_30px_120px_-70px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-        <div className="absolute right-20 top-10 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute left-10 bottom-10 h-28 w-28 rounded-full bg-indigo-500/10 blur-3xl" />
+  const handleNewMatch = () => {
+    void joinNewMatch(availableSymbolsForNew[0] as 'X' | 'O')
+    setIsOpen(true)
+  }
 
-        <div className="relative grid gap-8 lg:grid-cols-[1.15fr,0.85fr]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
+  const handleJoinMatch = (matchId: string) => {
+    void joinExistingMatch(matchId)
+    setIsOpen(true)
+  }
+
+  const statusCopy = useMemo(() => {
+    if (!activeMatch) return 'No game selected'
+    if (activeMatch.status === 'waiting') {
+      const hasTwoPlayers = activeMatch.players.length >= 2
+      return hasTwoPlayers ? 'Ready to start' : 'Waiting for an opponent'
+    }
+    if (activeMatch.status === 'active') {
+      return isMyTurn ? 'Your move' : `${activeMatch.currentTurn} to play`
+    }
+    if (activeMatch.status === 'abandoned') {
+      return 'Game abandoned'
+    }
+    if (activeMatch.winnerSymbol) {
+      return `${activeMatch.winnerSymbol} wins`
+    }
+    return 'Draw game'
+  }, [activeMatch, isMyTurn])
+
+  const headerSummary = useMemo(() => {
+    if (!myMatches.length) return 'No games yet today'
+    const parts: string[] = []
+    if (myTurnCount > 0) parts.push(`${myTurnCount} your turn`)
+    if (waitingForOpponentCount > 0)
+      parts.push(`${waitingForOpponentCount} waiting`)
+    const finishedCount = myMatches.filter((m) => m.status === 'finished').length
+    if (finishedCount > 0) parts.push(`${finishedCount} finished`)
+    return parts.join(' · ')
+  }, [myMatches, myTurnCount, waitingForOpponentCount])
+
+  const renderCollapsed = () => (
+    <button
+      type="button"
+      onClick={() => setIsOpen(true)}
+      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-left text-xs text-white/80 shadow-[0_18px_60px_-40px_rgba(0,0,0,0.9)] backdrop-blur"
+    >
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/20 text-[11px] font-semibold text-cyan-200">
+          XO
+        </span>
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+            Daily mini-game
+          </div>
+          <div className="text-xs font-medium text-white">
+            Tic-Tac-Toe
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-[11px] text-white/60">
+        {headerSummary}
+      </div>
+    </button>
+  )
+
+  const renderMatchStatusPill = (status: string, isYourTurn: boolean) => {
+    if (status === 'abandoned') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-200">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+          Abandoned
+        </span>
+      )
+    }
+    if (isYourTurn) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          Your turn
+        </span>
+      )
+    }
+    if (status === 'active') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-200">
+          <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+          In progress
+        </span>
+      )
+    }
+    if (status === 'waiting') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-200">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          Waiting
+        </span>
+      )
+    }
+    if (status === 'finished') {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/20 px-2 py-0.5 text-[10px] font-medium text-slate-100">
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+          Finished
+        </span>
+      )
+    }
+    return null
+  }
+
+  const renderMatchList = () => {
+    if (!matches.length) {
+      return (
+        <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
+          No games yet today. Start a quick round with a teammate.
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-2 max-h-52 overflow-y-auto pr-1 text-xs">
+        {matches.map((match) => {
+          const me = match.players.find((p) => p.userName === localUserName)
+          const opponent = match.players.find((p) => p.userName !== localUserName)
+          const isSelected = match.id === activeMatch?.id
+          const isYourTurn: boolean =
+            !!me && match.status === 'active' && match.currentTurn === me.symbol
+          const lastMove = match.moves[match.moves.length - 1]
+          const lastActivity = lastMove?.createdAt || match.createdAt
+
+          const canJoin =
+            !me &&
+            match.players.length < 2 &&
+            match.status !== 'finished' &&
+            match.status !== 'abandoned'
+
+          return (
+            <button
+              key={match.id}
+              type="button"
+              onClick={() => setActiveMatchId(match.id)}
+              className={cn(
+                'flex w-full items-center justify-between gap-2 rounded-lg border px-2 py-1.5 text-left transition',
+                'border-white/10 bg-white/5 hover:border-cyan-300/60 hover:bg-white/10',
+                isSelected && 'border-cyan-300/70 bg-cyan-500/10',
+              )}
+            >
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold text-white">
+                    {me ? me.symbol : '–'}
+                  </span>
+                  <span className="text-[11px] text-white/60">
+                    vs {opponent?.userName || '…'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-white/50">
+                  {renderMatchStatusPill(match.status, isYourTurn)}
+                  {lastActivity && (
+                    <span className="truncate">
+                      Last move {formatTimeAgo(lastActivity as string)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {canJoin && (
+                <button
+                  type="button"
+                  className="shrink-0 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-500/30"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleJoinMatch(match.id)
+                  }}
+                >
+                  Join
+                </button>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderBoard = () => (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-inner shadow-black/30">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'h-1.5 w-1.5 rounded-full',
+              activeMatch?.status === 'active'
+                ? 'bg-emerald-400'
+                : activeMatch?.status === 'waiting'
+                  ? 'bg-amber-300'
+                  : 'bg-slate-400',
+            )}
+          />
+          <span className="text-xs font-semibold text-white/80">
+            {statusCopy}
+          </span>
+        </div>
+        <button
+          onClick={() => refresh()}
+          className="text-[11px] font-semibold text-white/60 transition hover:text-white"
+          disabled={mutating}
+        >
+          Refresh
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5">
+        {cells.map((value, index) => {
+          const isWinning = winningLine.includes(index)
+          const disabled =
+            !myPlayer ||
+            isBusy ||
+            activeMatch?.status !== 'active' ||
+            value !== '-' ||
+            (activeMatch?.currentTurn &&
+              myPlayer &&
+              activeMatch.currentTurn !== myPlayer.symbol)
+          return (
+            <button
+              key={index}
+              onClick={() => handleCellClick(index)}
+              disabled={!!disabled}
+              className={cn(
+                'group flex aspect-square items-center justify-center rounded-lg border text-2xl font-black uppercase transition',
+                'bg-white/5 border-white/10 text-white/80 shadow-[0_12px_40px_-35px_rgba(0,0,0,0.9)]',
+                'hover:-translate-y-0.5 hover:border-cyan-300/60 hover:text-white',
+                disabled && 'cursor-not-allowed opacity-70 hover:translate-y-0',
+                isWinning &&
+                  'border-emerald-300/60 bg-emerald-400/10 text-emerald-100 shadow-[0_12px_40px_-30px_rgba(16,185,129,0.4)]',
+              )}
+            >
+              {value !== '-' ? value : ''}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-white/60">
+        <div className="flex items-center gap-3">
+          <div>
+            <span className="font-semibold text-white/80">You</span>{' '}
+            <span className="text-white/60">
+              {myPlayer ? `(${myPlayer.symbol})` : 'not in this game'}
+            </span>
+          </div>
+          {activeMatch && (
+            <span className="text-white/50">
+              {activeMatch.players.length}/2 players
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {myPlayer && activeMatch && activeMatch.status === 'finished' && (
+            <button
+              onClick={() => void resetMatch()}
+              disabled={mutating}
+              className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white hover:border-cyan-300/60 hover:bg-white/10"
+            >
+              Rematch
+            </button>
+          )}
+          {myPlayer && activeMatch &&
+            activeMatch.status !== 'finished' &&
+            activeMatch.status !== 'abandoned' && (
+              <button
+                onClick={() => void abandonMatch()}
+                disabled={mutating}
+                className="rounded-full border border-red-400/40 bg-red-500/10 px-2.5 py-1 text-[11px] font-semibold text-red-100 hover:border-red-300/70 hover:bg-red-500/20"
+              >
+                Leave game
+              </button>
+            )}
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <section className="mt-8">
+      <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-2 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.9)] backdrop-blur">
+        {!isOpen ? (
+          renderCollapsed()
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3 px-1">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
                   Daily mini-game
                 </p>
-                <h2 className="text-2xl font-black text-white md:text-3xl">
-                  Tic Tac Toe — live, persistent
+                <h2 className="text-base font-bold text-white">
+                  Quick Tic-Tac-Toe
                 </h2>
-                <p className="text-sm text-white/70">
-                  Play a fast round with teammates. State lives in the database,
-                  so moves sync across laptops.
+                <p className="mt-0.5 text-[11px] text-white/60">
+                  Play short rounds with teammates. Start as many games as you like
+                  each day.
                 </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.16em] text-white/70 shadow-inner shadow-black/30">
-                {match?.dateKey || '---'}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/30">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'h-2 w-2 rounded-full',
-                      match?.status === 'active'
-                        ? 'bg-emerald-400'
-                        : 'bg-amber-300',
-                    )}
-                  />
-                  <span className="text-sm font-semibold text-white/80">
-                    {statusCopy}
+              <div className="flex flex-col items-end gap-1 text-[11px] text-white/60">
+                {activeMatch?.dateKey && (
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-semibold uppercase tracking-[0.12em]">
+                    {activeMatch.dateKey}
                   </span>
-                </div>
+                )}
                 <button
-                  onClick={() => refresh()}
-                  className="text-xs font-semibold text-white/70 transition hover:text-white"
-                  disabled={mutating}
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="text-[11px] text-white/50 hover:text-white/80"
                 >
-                  Refresh
+                  Collapse
                 </button>
               </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {cells.map((value, index) => {
-                  const isWinning = winningLine.includes(index)
-                  const disabled =
-                    !myPlayer ||
-                    isBusy ||
-                    match?.status !== 'active' ||
-                    value !== '-' ||
-                    (match?.currentTurn &&
-                      myPlayer &&
-                      match.currentTurn !== myPlayer.symbol)
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleCellClick(index)}
-                      disabled={disabled}
-                      className={cn(
-                        'group flex aspect-square items-center justify-center rounded-xl border text-3xl font-black uppercase transition',
-                        'bg-white/5 border-white/10 text-white/80 shadow-[0_15px_60px_-50px_rgba(0,0,0,0.8)]',
-                        'hover:-translate-y-0.5 hover:border-cyan-300/60 hover:text-white',
-                      disabled && 'cursor-not-allowed opacity-70 hover:translate-y-0',
-                        isWinning &&
-                          'border-emerald-300/60 bg-emerald-400/10 text-emerald-100 shadow-[0_15px_60px_-40px_rgba(16,185,129,0.4)]',
-                      )}
-                    >
-                      {value !== '-' ? value : ''}
-                    </button>
-                  )
-                })}
-              </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/30">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white/80">
-                  Players
-                </span>
-                {match?.status === 'finished' && (
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70">
-                    {match.winnerSymbol ? `${match.winnerSymbol} wins` : 'Draw'}
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]">
+              {renderBoard()}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-white/80">
+                    Your games today
                   </span>
-                )}
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {['X', 'O'].map((symbol) => {
-                  const player = match?.players.find(
-                    (p) => p.symbol === symbol,
-                  )
-                  const isYou = player && player.userName === localUserName
-                  return (
-                    <div
-                      key={symbol}
-                      className={cn(
-                        'rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm shadow-[0_10px_40px_-35px_rgba(0,0,0,0.8)]',
-                        isYou && 'border-cyan-300/60 bg-cyan-400/10 text-white',
-                      )}
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleNewMatch}
+                      disabled={mutating}
+                      className="rounded-full bg-cyan-500/80 px-2.5 py-1 text-[11px] font-semibold text-white shadow-[0_12px_40px_-28px_rgba(34,211,238,0.9)] hover:bg-cyan-400 disabled:opacity-60"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">
-                          {symbol} {isYou ? '(you)' : ''}
-                        </span>
-                        <span className="text-xs text-white/60">
-                          {player?.userName || 'Waiting...'}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {!myPlayer && (
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => joinGame(availableSymbols[0] as 'X' | 'O')}
-                    disabled={mutating || availableSymbols.length === 0}
-                    className={cn(
-                      'w-full rounded-xl border px-4 py-2 text-sm font-semibold transition',
-                      availableSymbols.length === 0
-                        ? 'cursor-not-allowed border-white/10 bg-white/5 text-white/40'
-                        : 'border-cyan-400/70 bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-[0_20px_60px_-40px_rgba(59,130,246,0.6)] hover:from-indigo-400 hover:to-cyan-300',
-                    )}
-                  >
-                    {availableSymbols.length === 0
-                      ? 'Match full'
-                      : `Join as ${availableSymbols[0]}`}
-                  </button>
-                </div>
-              )}
-
-              {myPlayer && match?.status === 'finished' && (
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => resetMatch()}
-                    disabled={mutating}
-                    className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-300/60 hover:bg-white/15"
-                  >
-                    Start a rematch
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-black/30">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-white/80">
-                  Activity
-                </span>
-                <span className="text-xs text-white/60">
-                  {match?.moves.length || 0} moves
-                </span>
-              </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {match?.moves.length ? (
-                  match.moves.map((move) => {
-                    const player =
-                      match.players.find((p) => p.id === move.playerId) || null
-                    return (
-                      <div
-                        key={move.id}
-                        className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-sm text-white/80"
-                      >
-                        <span>
-                          <span className="font-semibold">{move.symbol}</span>{' '}
-                          → cell {move.position + 1}
-                        </span>
-                        <span className="text-xs text-white/60">
-                          {player?.userName || 'Player'}
-                        </span>
-                      </div>
-                    )
-                  })
-                ) : (
-                  <div className="rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-sm text-white/60">
-                    No moves yet. Claim your symbol and start.
+                      New game
+                    </button>
                   </div>
-                )}
+                </div>
+                {renderMatchList()}
               </div>
             </div>
 
             {error && (
-              <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-sm text-amber-50">
-                <div className="flex items-center justify-between">
-                  <span>{error}</span>
+              <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-50">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate">{error}</span>
                   <button
                     onClick={() => setError(null)}
-                    className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-100 underline decoration-dotted underline-offset-2"
+                    className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-100 underline decoration-dotted underline-offset-2"
                   >
                     Dismiss
                   </button>
@@ -286,7 +463,7 @@ export function TicTacToePanel() {
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </section>
   )
