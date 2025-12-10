@@ -12,7 +12,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "build": "prisma generate && next build"
+    "build": "prisma generate && next build",
+    "test:idea": "tsx scripts/tests/idea-smoke.ts",
+    "verify": "tsx scripts/tests/run-preflight.ts"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
@@ -64,6 +66,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^9.39.1",
     "genkit-cli": "^1.14.1",
     "postcss": "^8",
     "prisma": "^6.14.0",

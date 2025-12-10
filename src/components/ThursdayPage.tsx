@@ -226,7 +226,7 @@ export function ThursdayPage({ restaurants, language, setLanguage, aiLimited }: 
                   </p>
                   <p className="text-2xl font-bold text-white">
                     {typeof weatherInfo?.wind === 'number'
-                      ? `${weatherInfo.wind} m/s`
+                      ? `${weatherInfo.wind} km/h`
                       : '—'}
                   </p>
                 </div>

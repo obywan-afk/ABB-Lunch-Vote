@@ -327,7 +327,7 @@ export function TuesdayPage({ restaurants, language, setLanguage, aiLimited }: T
                       <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                         <p className="text-[10px] uppercase tracking-[0.12em] text-white/50">Wind/Rain</p>
                         <p className="text-sm font-semibold text-white">
-                          {typeof weatherInfo?.wind === 'number' ? `${weatherInfo.wind} m/s` : '—'} • {typeof weatherInfo?.precipitation === 'number' ? `${weatherInfo.precipitation}%` : '—'}
+                          {typeof weatherInfo?.wind === 'number' ? `${weatherInfo.wind} km/h` : '—'} • {typeof weatherInfo?.precipitation === 'number' ? `${weatherInfo.precipitation}%` : '—'}
                         </p>
                       </div>
                     </div>

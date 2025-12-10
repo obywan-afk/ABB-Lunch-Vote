@@ -234,7 +234,7 @@ export function WednesdayPage({ restaurants, language, setLanguage, aiLimited }:
                   </p>
                   <p className="text-lg font-bold">
                     {typeof weatherInfo?.wind === 'number'
-                      ? `${weatherInfo.wind} m/s`
+                      ? `${weatherInfo.wind} km/h`
                       : '—'}
                   </p>
                 </div>
