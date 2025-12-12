@@ -976,11 +976,16 @@ export class RestaurantScrapers {
       });
 
       if (!aiResult.output?.success || !aiResult.output.targetDayMenu?.length) {
+        const message =
+          aiResult.output?.error &&
+          /too many requests|quota|rate limit/i.test(aiResult.output.error)
+            ? `Menu temporarily unavailable for ${targetDay}. Our AI parser hit its rate limit — please check ravintolavalimo.fi directly.`
+            : ''
         return {
           restaurantId: 'ravintola-valimo',
           restaurantName: 'Ravintola Valimo',
-          rawMenu: '',
-          success: false,
+          rawMenu: message,
+          success: Boolean(message),
           error: aiResult.output?.error || `AI found no menu items for ${targetDay}`
         }
       }
@@ -1019,11 +1024,16 @@ export class RestaurantScrapers {
 
     } catch (error) {
       console.log(`❌ AI-powered Ravintola Valimo scraping failed:`, error)
+      const message =
+        error instanceof Error &&
+        /too many requests|quota|rate limit/i.test(error.message)
+          ? 'Menu temporarily unavailable — AI parser is rate-limited. Please check ravintolavalimo.fi directly.'
+          : ''
       return {
         restaurantId: 'ravintola-valimo',
         restaurantName: 'Ravintola Valimo',
-        rawMenu: '',
-        success: false,
+        rawMenu: message,
+        success: Boolean(message),
         error: error instanceof Error ? error.message : 'AI extraction failed'
       }
     }

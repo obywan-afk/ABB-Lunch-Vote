@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { getMenuDateLabel } from '@/lib/menuDateLabel'
 
 interface ABBNeuralRestaurantCardProps {
   restaurant: any
@@ -21,6 +22,7 @@ export function ABBNeuralRestaurantCard({
   index 
 }: ABBNeuralRestaurantCardProps) {
   const [powerLevel, setPowerLevel] = useState(0)
+  const menuDateLabel = getMenuDateLabel(restaurant.fetchedForDate)
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -109,10 +111,17 @@ export function ABBNeuralRestaurantCard({
             <div className="flex items-center gap-3 text-sm">
               <span className="text-green-400/70 font-mono">NODE:</span>
               <span className="text-cyan-400/70">{restaurant.location || 'GRID-7'}</span>
-              <div className="flex gap-1 ml-auto">
-                <div className="w-1 h-3 bg-cyan-400/50 animate-pulse" />
-                <div className="w-1 h-3 bg-green-400/50 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="w-1 h-3 bg-orange-500/50 animate-pulse" style={{ animationDelay: '0.4s' }} />
+              <div className="ml-auto flex items-center gap-2">
+                {menuDateLabel && (
+                  <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-cyan-100/80">
+                    Menu {menuDateLabel}
+                  </span>
+                )}
+                <div className="flex gap-1">
+                  <div className="w-1 h-3 bg-cyan-400/50 animate-pulse" />
+                  <div className="w-1 h-3 bg-green-400/50 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-1 h-3 bg-orange-500/50 animate-pulse" style={{ animationDelay: '0.4s' }} />
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getMenuDateLabel } from '@/lib/menuDateLabel'
 
 interface RetroRestaurantCardProps {
   restaurant: any
@@ -21,6 +22,7 @@ export function RetroRestaurantCard({
   index 
 }: RetroRestaurantCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const menuDateLabel = getMenuDateLabel(restaurant.fetchedForDate)
   
   return (
     <div 
@@ -107,6 +109,11 @@ export function RetroRestaurantCard({
             <div className="flex items-center gap-3 text-sm">
               <span className="text-cyan-400 font-mono">▸</span>
               <span className="text-purple-300/80">{restaurant.location || 'LOCATION_NULL'}</span>
+              {menuDateLabel && (
+                <span className="rounded-full border border-pink-400/40 bg-pink-500/10 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.3em] text-pink-100/80">
+                  Menu {menuDateLabel}
+                </span>
+              )}
               {restaurant.url && (
                 <a 
                   href={restaurant.url} 

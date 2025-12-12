@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { getMenuDateLabel } from '@/lib/menuDateLabel'
 
 interface MotionRestaurantCardProps {
   restaurant: any
@@ -20,12 +21,7 @@ export function MotionRestaurantCard({
   index 
 }: MotionRestaurantCardProps) {
   const isCache = Boolean(restaurant.fromCache);
-  const menuDateLabel = (() => {
-    if (!restaurant.fetchedForDate) return null;
-    const safeDate = new Date(`${restaurant.fetchedForDate}T12:00:00`);
-    if (isNaN(safeDate.getTime())) return restaurant.fetchedForDate;
-    return safeDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-  })();
+  const menuDateLabel = getMenuDateLabel(restaurant.fetchedForDate)
 
   return (
     <div 
