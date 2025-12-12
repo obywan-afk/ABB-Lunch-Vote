@@ -6,7 +6,9 @@
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "dev": "next dev --turbopack -p 9002",
+    "predev": "node scripts/ensure-next-manifests.mjs",
+    "dev": "NODE_ENV=development next dev -p 9002",
+    "dev:turbopack": "NODE_ENV=development next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "start": "next start",
