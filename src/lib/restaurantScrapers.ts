@@ -296,20 +296,7 @@ export class RestaurantScrapers {
     const dayMatches = scope.match(dayNamePattern) || [];
     console.log(`🔧 POR found day names: ${dayMatches}`);
 
-    // The POR format after HTML processing is: "  Tiistai 26.8." (with leading spaces and date)
-    // We need a pattern that matches this structure
-    const porDayPattern = new RegExp(
-      `^\\s*(${dayNames.join('|')})\\s+\\d{1,2}\\.\\d{1,2}\\.\\s*$([\\s\\S]*?)(?=^\\s*(?:${dayNames.join('|')})\\s+\\d{1,2}\\.\\d{1,2}\\.|$)`,
-      'gim'
-    );
-
     console.log(`🔧 POR trying text-based pattern for processed content`);
-
-    // Alternative pattern for day headers without --- markers
-    const altDayPattern = new RegExp(
-      `\\b(${dayNames.join('|')})\\b[^\\n]*\\n([\\s\\S]*?)(?=\\b(?:${dayNames.join('|')})\\b|$)`,
-      'gi'
-    );
 
     const reLegend = /^\(\s*(?:vl|l|m|g|vs|mp|so|se|si|sm|ka|kl|äy)\s*(?:[,)\s].*)?$/i;
     const reBoiler = /(EU-asetus|regulation|Hinnat|Prices|We reserve rights|Opening hours|Aukiolo)/i;
@@ -331,11 +318,16 @@ export class RestaurantScrapers {
     let currentLang: 'fi' | 'en' | null = null; 
     let currentContent: string[] = [];
 
+    const dayHeaderRe = new RegExp(
+      `^\\s*(${dayNames.join('|')})\\b(?:\\s+\\d{1,2}[./-]\\d{1,2}(?:[./-]\\d{2,4})?\\.?\\s*)?(?::)?\\s*$`,
+      'i'
+    );
+
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      // Check if this line contains a day name with date pattern
-      const dayWithDateMatch = trimmedLine.match(new RegExp(`^\\s*(${dayNames.join('|')})\\s+\\d{1,2}\\.\\d{1,2}\\.`, 'i'));
+      // Accept both "Tiistai 17.2.", "Tiistai 17/2", "Tiistai:" and plain "Tiistai"
+      const dayWithDateMatch = trimmedLine.match(dayHeaderRe);
       
       if (dayWithDateMatch) {
         // Save previous day's content if exists

@@ -10,6 +10,8 @@ type ProcessOptions = {
   skipCache?: boolean
 }
 
+const FI_ONLY_RESTAURANTS = new Set(['valimo-park', 'factory', 'ravintola-valimo']);
+
 // Helper function to detect if text is primarily in Finnish
 function detectFinnish(text: string): boolean {
   // Common Finnish food/menu words that are unlikely in English
@@ -143,11 +145,21 @@ export class EnhancedMenuProcessor {
     if (!skipCache) {
 const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurantId, language, dateKey)
       if (cached) {
-        console.log(`Cache hit for ${restaurantName} (${language}) on ${dateKey}`)
-        return { 
-          rawMenu: cleanMenuForDisplay(cached.rawMenu), 
-          parsedMenu: cleanMenuForDisplay(cached.parsedMenu), 
-          fromCache: true 
+        if (language === 'en' && FI_ONLY_RESTAURANTS.has(restaurantId) && detectFinnish(cached.rawMenu)) {
+          console.log(`Skipping stale EN cache for ${restaurantName}: cached content appears Finnish`)
+        } else if (
+          restaurantId === 'por' &&
+          /not available this week|ei ole saatavilla tällä viikolla/i.test(cached.rawMenu)
+        ) {
+          // Self-heal old negative cache entries after parser improvements.
+          console.log(`Skipping POR negative cache for ${restaurantName} to re-validate day extraction`)
+        } else {
+          console.log(`Cache hit for ${restaurantName} (${language}) on ${dateKey}`)
+          return { 
+            rawMenu: cleanMenuForDisplay(cached.rawMenu), 
+            parsedMenu: cleanMenuForDisplay(cached.parsedMenu), 
+            fromCache: true 
+          }
         }
       }
     }
@@ -214,8 +226,11 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
             }
 
             // If the specific day isn't available, return a helpful message instead of failing
-            const availableDays = weekly.rawMenu.match(/---\s*(Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai|Monday|Tuesday|Wednesday|Thursday|Friday)\s*---/gi);
-            const daysList = availableDays ? availableDays.map(d => d.replace(/---\s*|\s*---/g, '')).join(', ') : 'none found';
+            const availableDays = weekly.rawMenu.match(/---\s*(Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai|Monday|Tuesday|Wednesday|Thursday|Friday)\s*---/gi) ?? [];
+            const labels = availableDays.map(d => d.replace(/---\s*|\s*---/g, '').trim());
+            const daySet = new Set(labels);
+            const daysInRequestedLang = (language === 'fi' ? FI_DAYS : EN_DAYS).filter(day => daySet.has(day));
+            const daysList = daysInRequestedLang.length ? daysInRequestedLang.join(', ') : 'none found';
             
             const notAvailableMessage = language === 'fi' 
               ? `${fiDay} ei ole saatavilla tällä viikolla. Saatavilla olevat päivät: ${daysList}`
@@ -241,8 +256,8 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
           const targetFi = targetDayFi;
           scrapedMenu = await RestaurantScrapers.scrapeValimoPark({ targetDayFi: targetFi });
           if (scrapedMenu.success && scrapedMenu.rawMenu) {
-            // Faundori only provides Finnish content, need translation for English
-            if (language === 'en' && detectFinnish(scrapedMenu.rawMenu)) {
+            // Faundori is Finnish-only: always translate for English mode.
+            if (language === 'en') {
               console.log(`🌐 Translating Faundori menu from Finnish to English...`);
               try {
                 const translationResult = await translateMenuToEnglish({
@@ -262,11 +277,15 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                   const cleaned = cleanMenuForDisplay(translatedMenu);
                   return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false };
                 } else {
-                  console.log(`⚠️ Translation failed, returning Finnish content: ${translationResult.output?.error}`);
+                  console.log(`⚠️ Translation failed for Faundori: ${translationResult.output?.error}`);
                 }
               } catch (error) {
                 console.error(`❌ Translation error for Faundori:`, error);
               }
+
+              // Do not cache Finnish fallback as English; allow retry on next request.
+              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu);
+              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false };
             }
             
             await DbMenuCache.setCachedProcessedMenu(
@@ -308,8 +327,8 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
             targetDay: targetDayFi, language
           })
           if (scrapedMenu.success && scrapedMenu.rawMenu) {
-            // Factory website is in Finnish, need translation for English
-            if (language === 'en' && detectFinnish(scrapedMenu.rawMenu)) {
+            // Factory is Finnish-only: always translate for English mode.
+            if (language === 'en') {
               console.log(`🌐 Translating Factory menu from Finnish to English...`);
               try {
                 const translationResult = await translateMenuToEnglish({
@@ -329,11 +348,15 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                   const cleaned = cleanMenuForDisplay(translatedMenu);
                   return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false };
                 } else {
-                  console.log(`⚠️ Translation failed, returning Finnish content: ${translationResult.output?.error}`);
+                  console.log(`⚠️ Translation failed for Factory: ${translationResult.output?.error}`);
                 }
               } catch (error) {
                 console.error(`❌ Translation error for Factory:`, error);
               }
+
+              // Do not cache Finnish fallback as English; allow retry on next request.
+              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu)
+              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false }
             }
             
             await DbMenuCache.setCachedProcessedMenu(
@@ -350,8 +373,8 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
             targetDay: targetDayFi, language
           })
           if (scrapedMenu.success && scrapedMenu.rawMenu) {
-            // Ravintola Valimo website is in Finnish, need translation for English
-            if (language === 'en' && detectFinnish(scrapedMenu.rawMenu)) {
+            // Ravintola Valimo is Finnish-only: always translate for English mode.
+            if (language === 'en') {
               console.log(`🌐 Translating Ravintola Valimo menu from Finnish to English...`);
               try {
                 const translationResult = await translateMenuToEnglish({
@@ -371,11 +394,15 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                   const cleaned = cleanMenuForDisplay(translatedMenu);
                   return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false };
                 } else {
-                  console.log(`⚠️ Translation failed, returning Finnish content: ${translationResult.output?.error}`);
+                  console.log(`⚠️ Translation failed for Ravintola Valimo: ${translationResult.output?.error}`);
                 }
               } catch (error) {
                 console.error(`❌ Translation error for Ravintola Valimo:`, error);
               }
+
+              // Do not cache Finnish fallback as English; allow retry on next request.
+              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu)
+              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false }
             }
             
             await DbMenuCache.setCachedProcessedMenu(
