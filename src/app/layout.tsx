@@ -5,6 +5,11 @@ import { Toaster } from "@/components/ui/toaster"
 export const metadata: Metadata = {
   title: 'ABB Lunch Vote',
   description: 'Vote for your favorite lunch spot with your favorite team.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

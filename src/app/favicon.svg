@@ -1,26 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ABB Lunch Vote icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lunch bowl favicon">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="20%" r="80%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="35%" stop-color="#2563eb" />
-      <stop offset="100%" stop-color="#0f172a" />
-    </radialGradient>
-    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef3c7" />
-      <stop offset="100%" stop-color="#f97316" />
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1224" />
+      <stop offset="100%" stop-color="#1f3b8a" />
     </linearGradient>
-    <linearGradient id="utensil" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#cbd5f5" />
+    <linearGradient id="bowl" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#ea580c" />
     </linearGradient>
   </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#bg)" />
-  <circle cx="32" cy="32" r="24" fill="none" stroke="url(#ring)" stroke-width="2.2" opacity="0.85" />
-  <g fill="none" stroke="url(#utensil)" stroke-linecap="round" stroke-width="2.5">
-    <path d="M22 18v18c0 2.5-1.8 4.6-4.3 5l-.2.03c-1.1.15-1.5-1.26-.55-1.83C19.5 38.18 21 36.7 21 34V18" />
-    <path d="M41 18s3 2 3 6-2 6-3 6-3-2-3-6 3-6 3-6z" />
-    <path d="M28 18v25" />
-    <path d="M34 18v25" />
+
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)" />
+
+  <g fill="none" stroke="#f8fafc" stroke-width="2.2" stroke-linecap="round" opacity="0.9">
+    <path d="M19 18c0-2.5 2-4.5 4.5-4.5S28 15.5 28 18" />
+    <path d="M26 18c0-2.5 2-4.5 4.5-4.5S35 15.5 35 18" />
+    <path d="M33 18c0-2.5 2-4.5 4.5-4.5S42 15.5 42 18" />
   </g>
-  <path d="M18 45h28" stroke="url(#utensil)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+
+  <path d="M14 31h36c0 10.8-8.4 19-18 19s-18-8.2-18-19z" fill="url(#bowl)" />
+  <path d="M11 31h42" stroke="#fed7aa" stroke-width="3" stroke-linecap="round" />
+  <path d="M16 41h32" stroke="#ffedd5" stroke-width="2" stroke-linecap="round" opacity="0.55" />
+
+  <g stroke="#f8fafc" stroke-linecap="round" stroke-width="2.1">
+    <path d="M52 17v16" />
+    <path d="M49.5 17v8.5" />
+    <path d="M54.5 17v8.5" />
+    <path d="M52 33v15" />
+  </g>
 </svg>
