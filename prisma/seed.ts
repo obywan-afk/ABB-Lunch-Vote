@@ -22,6 +22,7 @@ async function main() {
     { id: 'por',              name: 'Pitäjänmäen Osuusruokala (POR)',  location: 'Pitäjänmäki',    description: 'POR kitchen (WordPress / HTML)' },
     { id: 'valimo-park',      name: 'Faundori',                        location: 'Valimo',         description: 'ISS / Flockler feed' },
     { id: 'valaja',           name: 'Valaja',                          location: 'Pitäjänmäki',    description: 'Sodexo weekly_json/190' },
+    { id: 'antell-kuohu',     name: 'Antell Kuohu',                    location: 'Pitäjänmäki',    description: 'Antell weekday tabs (HTML)' },
     { id: 'factory',          name: 'Factory Pitäjänmäki',             location: 'Pitäjänmäki',    description: 'AI extractor on Factory site' },
     { id: 'ravintola-valimo', name: 'Ravintola Valimo',                location: 'Pitäjänmäki',    description: 'AI extractor on Valimo site' },
   ]

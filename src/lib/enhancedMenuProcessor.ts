@@ -10,25 +10,8 @@ type ProcessOptions = {
   skipCache?: boolean
 }
 
-const FI_ONLY_RESTAURANTS = new Set(['valimo-park', 'factory', 'ravintola-valimo']);
+const FI_ONLY_RESTAURANTS = new Set(['valimo-park', 'factory', 'ravintola-valimo', 'antell-kuohu']);
 
-// Helper function to detect if text is primarily in Finnish
-function detectFinnish(text: string): boolean {
-  // Common Finnish food/menu words that are unlikely in English
-  const finnishIndicators = [
-    'keitto', 'kastike', 'peruna', 'broileri', 'kana', 'liha', 'kala',
-    'vihannekset', 'salaatti', 'pihvi', 'paistileike', 'paistettu',
-    'grillattua', 'uunissa', 'maanantai', 'tiistai', 'keskiviikko', 
-    'torstai', 'perjantai', 'päivän', 'viikon', 'lounas',
-    'jauheliha', 'lohta', 'naudanlihaa', 'possua', 'kasvispyöryköitä'
-  ];
-  
-  const lowerText = text.toLowerCase();
-  const matches = finnishIndicators.filter(word => lowerText.includes(word));
-  
-  // If we find 3 or more Finnish indicators, consider it Finnish text
-  return matches.length >= 3;
-}
 
 // Helper function to clean menu text for display (remove day headers and artifacts)
 function cleanMenuForDisplay(menuText: string): string {
@@ -145,8 +128,8 @@ export class EnhancedMenuProcessor {
     if (!skipCache) {
 const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurantId, language, dateKey)
       if (cached) {
-        if (language === 'en' && FI_ONLY_RESTAURANTS.has(restaurantId) && detectFinnish(cached.rawMenu)) {
-          console.log(`Skipping stale EN cache for ${restaurantName}: cached content appears Finnish`)
+        if (language === 'en' && FI_ONLY_RESTAURANTS.has(restaurantId)) {
+          console.log(`Skipping EN cache for ${restaurantName}: Finnish-only source requires fresh translation`)
         } else if (
           restaurantId === 'por' &&
           /not available this week|ei ole saatavilla tällä viikolla/i.test(cached.rawMenu)
@@ -283,9 +266,11 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                 console.error(`❌ Translation error for Faundori:`, error);
               }
 
-              // Do not cache Finnish fallback as English; allow retry on next request.
-              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu);
-              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false };
+              return {
+                rawMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                parsedMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                fromCache: false
+              };
             }
             
             await DbMenuCache.setCachedProcessedMenu(
@@ -354,9 +339,11 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                 console.error(`❌ Translation error for Factory:`, error);
               }
 
-              // Do not cache Finnish fallback as English; allow retry on next request.
-              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu)
-              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false }
+              return {
+                rawMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                parsedMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                fromCache: false
+              }
             }
             
             await DbMenuCache.setCachedProcessedMenu(
@@ -400,11 +387,58 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
                 console.error(`❌ Translation error for Ravintola Valimo:`, error);
               }
 
-              // Do not cache Finnish fallback as English; allow retry on next request.
-              const fallback = cleanMenuForDisplay(scrapedMenu.rawMenu)
-              return { rawMenu: fallback, parsedMenu: fallback, fromCache: false }
+              return {
+                rawMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                parsedMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                fromCache: false
+              }
             }
             
+            await DbMenuCache.setCachedProcessedMenu(
+              restaurantId, restaurantName, language, scrapedMenu.rawMenu, scrapedMenu.rawMenu, dateKey
+            )
+            const cleaned = cleanMenuForDisplay(scrapedMenu.rawMenu)
+            return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false }
+          }
+          break
+        }
+
+        case 'antell-kuohu': {
+          scrapedMenu = await RestaurantScrapers.scrapeAntellKuohu({ targetDayFi });
+          if (scrapedMenu.success && scrapedMenu.rawMenu) {
+            // Antell Kuohu is Finnish-only: always translate for English mode.
+            if (language === 'en') {
+              console.log(`🌐 Translating Antell Kuohu menu from Finnish to English...`);
+              try {
+                const translationResult = await translateMenuToEnglish({
+                  finnishMenu: scrapedMenu.rawMenu,
+                  restaurantName: restaurantName
+                });
+
+                if (translationResult.output?.success && translationResult.output.translatedMenu) {
+                  const translatedMenu = translationResult.output.translatedMenu;
+                  await DbMenuCache.setCachedProcessedMenu(
+                    restaurantId, restaurantName, 'fi', scrapedMenu.rawMenu, scrapedMenu.rawMenu, dateKey
+                  );
+                  await DbMenuCache.setCachedProcessedMenu(
+                    restaurantId, restaurantName, 'en', translatedMenu, translatedMenu, dateKey
+                  );
+                  const cleaned = cleanMenuForDisplay(translatedMenu);
+                  return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false };
+                } else {
+                  console.log(`⚠️ Translation failed for Antell Kuohu: ${translationResult.output?.error}`);
+                }
+              } catch (error) {
+                console.error(`❌ Translation error for Antell Kuohu:`, error);
+              }
+
+              return {
+                rawMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                parsedMenu: `English translation is temporarily unavailable for ${restaurantName}. Please switch to Finnish (FI) for this menu.`,
+                fromCache: false
+              }
+            }
+
             await DbMenuCache.setCachedProcessedMenu(
               restaurantId, restaurantName, language, scrapedMenu.rawMenu, scrapedMenu.rawMenu, dateKey
             )
@@ -459,3 +493,5 @@ const cached = await DbMenuCache.getCachedProcessedMenuWithValidation(restaurant
     }
   }
 }
+
+

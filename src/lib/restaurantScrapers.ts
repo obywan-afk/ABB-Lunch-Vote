@@ -803,6 +803,86 @@ export class RestaurantScrapers {
     }
   }
 
+  static async scrapeAntellKuohu(opts?: { targetDayFi?: string }): Promise<ScrapedMenu> {
+    const restaurantId = 'antell-kuohu';
+    const restaurantName = 'Antell Kuohu';
+    console.log(`🍽️ Scraping Antell Kuohu (tabs in HTML)…`);
+
+    const dayFi = (opts?.targetDayFi && DAY_FI.includes(opts.targetDayFi as any))
+      ? (opts.targetDayFi as (typeof DAY_FI)[number])
+      : 'Tiistai';
+    const dayEn = DAY_FI_TO_EN[dayFi];
+
+    try {
+      const html = await this.fetchWithRetry('https://antell.fi/lounas/helsinki/kuohu/');
+
+      const panelStartRe = new RegExp(`<section\\s+id=["']panel-${dayEn}["'][^>]*>`, 'i');
+      const startMatch = panelStartRe.exec(html);
+      if (!startMatch || startMatch.index === undefined) {
+        return {
+          restaurantId,
+          restaurantName,
+          rawMenu: '',
+          success: false,
+          error: `Could not find day panel for ${dayEn}`,
+        };
+      }
+
+      const afterStart = html.slice(startMatch.index + startMatch[0].length);
+      const nextPanelIdx = afterStart.search(/<section\s+id=["']panel-(Monday|Tuesday|Wednesday|Thursday|Friday)["']/i);
+      const sectionHtml = (nextPanelIdx === -1 ? afterStart : afterStart.slice(0, nextPanelIdx));
+
+      const cleanText = (input: string) =>
+        this.decodeEntities(
+          input
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+        );
+
+      const priceMatch = sectionHtml.match(/class=["']tabpanel__header__price["'][^>]*>([\s\S]*?)<\/div>/i);
+      const price = priceMatch ? cleanText(priceMatch[1]) : '';
+
+      const items: string[] = [];
+      const itemRe = /class=["']accordion__button["'][^>]*>\s*([\s\S]*?)\s*<\/button>[\s\S]*?class=["']accordion__footer__special-diets["'][^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/gi;
+      let m: RegExpExecArray | null;
+      while ((m = itemRe.exec(sectionHtml)) !== null) {
+        const dish = cleanText(m[1]);
+        const diets = cleanText(m[2]).replace(/[|]+/g, ',');
+        if (!dish) continue;
+        if (/katso lisätiedot|miltä maistui\?/i.test(dish)) continue;
+        items.push(diets ? `${dish} [${diets}]` : dish);
+      }
+
+      // De-duplicate while preserving order.
+      const seen = new Set<string>();
+      const uniqueItems = items.filter(item => (seen.has(item) ? false : (seen.add(item), true)));
+
+      let rawMenu = `--- ${dayFi} ---\n`;
+      if (price) rawMenu += `Lounasbuffet ${price}\n`;
+      rawMenu += uniqueItems.join('\n');
+      rawMenu = this.cleanMenuText(rawMenu);
+
+      const success = uniqueItems.length >= 3 && rawMenu.length > 40;
+      return {
+        restaurantId,
+        restaurantName,
+        rawMenu: success ? rawMenu : '',
+        success,
+        error: success ? undefined : `Could not extract enough menu items for ${dayFi}`,
+      };
+    } catch (error) {
+      console.log(`❌ Antell Kuohu scraping failed:`, error);
+      return {
+        restaurantId,
+        restaurantName,
+        rawMenu: '',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
   // AI-powered Factory scraper
   static async scrapeFactoryAI(options: AiScrapingOptions): Promise<ScrapedMenu> {
     const { targetDay, language } = options;

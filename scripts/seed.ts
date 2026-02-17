@@ -27,6 +27,12 @@ const restaurants = [
     description: 'Traditional Finnish restaurant'
   },
   {
+    id: 'antell-kuohu',
+    name: 'Antell Kuohu',
+    location: 'Helsinki',
+    description: 'Antell weekday tabs (Finnish only)'
+  },
+  {
     id: 'factory',
     name: 'Factory',
     location: 'Helsinki',
