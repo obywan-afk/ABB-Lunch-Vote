@@ -11,12 +11,50 @@ type ProcessOptions = {
 
 type ProcessedMenuResult = { rawMenu: string; parsedMenu: string; fromCache: boolean }
 
-function cleanMenuForDisplay(menuText: string): string {
-  return menuText
+function sanitizeRavintolaValimoMenu(menuText: string): string {
+  const stopMarkers = [
+    'Lettu Thursday',
+    'Blini Friday',
+    'Lunch buffet',
+    'Catering Services',
+    'Green Deli',
+    'GreenDeli',
+    'Company - And Private Events',
+    'Get Connected',
+    'About Us',
+    'OUR LOCATION',
+    'Our Location',
+    'Live Grill',
+    'Welcome to Restaurant Valimo',
+  ]
+
+  let text = menuText
+  for (const marker of stopMarkers) {
+    const idx = text.toLowerCase().indexOf(marker.toLowerCase())
+    if (idx !== -1) {
+      text = text.slice(0, idx)
+      break
+    }
+  }
+
+  return text
+    .replace(/^\/\/\s*MENU_DATA_STREAM\s*$/gim, '')
+    .replace(/^›\s*$/gim, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function cleanMenuForDisplay(menuText: string, restaurantId?: string): string {
+  const normalized = (restaurantId === 'ravintola-valimo'
+    ? sanitizeRavintolaValimoMenu(menuText)
+    : menuText)
+    .replace(/^\/\/\s*MENU_DATA_STREAM\s*$/gim, '')
     .replace(/---\s*(Monday|Tuesday|Wednesday|Thursday|Friday|Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai)\s*---\s*/gi, '')
     .replace(/\bbr\b\s*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+
+  return normalized
 }
 
 function fallbackParseMenu(menuText: string): string {
@@ -42,8 +80,8 @@ async function cacheAndReturnMenu(
   menu: string,
   dateKey: string
 ): Promise<ProcessedMenuResult> {
-  await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, menu, menu, dateKey)
-  const cleaned = cleanMenuForDisplay(menu)
+  const cleaned = cleanMenuForDisplay(menu, restaurantId)
+  await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, cleaned, cleaned, dateKey)
   return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false }
 }
 
@@ -59,9 +97,11 @@ async function handleFinnishOnlyMenu(
   console.log(`Translating ${restaurantName} menu from Finnish to English...`)
   try {
     const translatedMenu = await translateMenuToEnglish(rawMenu)
-    await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, 'fi', rawMenu, rawMenu, dateKey)
-    await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, 'en', translatedMenu, translatedMenu, dateKey)
-    const cleaned = cleanMenuForDisplay(translatedMenu)
+    const cleanedFi = cleanMenuForDisplay(rawMenu, restaurantId)
+    const cleanedEn = cleanMenuForDisplay(translatedMenu, restaurantId)
+    await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, 'fi', cleanedFi, cleanedFi, dateKey)
+    await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, 'en', cleanedEn, cleanedEn, dateKey)
+    const cleaned = cleanedEn
     return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false }
   } catch (error) {
     console.error(`Translation error for ${restaurantName}:`, error)
@@ -143,8 +183,8 @@ export class EnhancedMenuProcessor {
         } else {
           console.log(`Cache hit for ${restaurantName} (${language}) on ${dateKey}`)
           return {
-            rawMenu: cleanMenuForDisplay(cached.rawMenu),
-            parsedMenu: cleanMenuForDisplay(cached.parsedMenu),
+            rawMenu: cleanMenuForDisplay(cached.rawMenu, restaurantId),
+            parsedMenu: cleanMenuForDisplay(cached.parsedMenu, restaurantId),
             fromCache: true,
           }
         }
@@ -227,13 +267,15 @@ export class EnhancedMenuProcessor {
       }
 
       if (!scrapedMenu.success) {
-        const parsedMenu = fallbackParseMenu(scrapedMenu.rawMenu)
-        await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, scrapedMenu.rawMenu, parsedMenu, dateKey)
-        return { rawMenu: scrapedMenu.rawMenu, parsedMenu, fromCache: false }
+        const parsedMenu = cleanMenuForDisplay(fallbackParseMenu(scrapedMenu.rawMenu), restaurantId)
+        const rawMenu = cleanMenuForDisplay(scrapedMenu.rawMenu, restaurantId)
+        await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, rawMenu, parsedMenu, dateKey)
+        return { rawMenu, parsedMenu, fromCache: false }
       }
 
-      await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, scrapedMenu.rawMenu, scrapedMenu.rawMenu, dateKey)
-      return { rawMenu: scrapedMenu.rawMenu, parsedMenu: scrapedMenu.rawMenu, fromCache: false }
+      const cleaned = cleanMenuForDisplay(scrapedMenu.rawMenu, restaurantId)
+      await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, cleaned, cleaned, dateKey)
+      return { rawMenu: cleaned, parsedMenu: cleaned, fromCache: false }
     } catch (error) {
       console.error(`Error processing ${restaurantName}:`, error)
       return {
