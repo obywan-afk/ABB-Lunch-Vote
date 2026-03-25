@@ -16,6 +16,10 @@ export class DbMenuCache {
     return new Date().toISOString().split('T')[0]
   }
 
+  private static isTemporaryMenuPlaceholder(value: string): boolean {
+    return /menu temporarily unavailable|ai parser is rate-limited|translation is temporarily unavailable/i.test(value)
+  }
+
   static async getCachedProcessedMenu(
     restaurantId: string,
     language: 'en' | 'fi',
@@ -61,6 +65,17 @@ static async getCachedProcessedMenuWithValidation(
 
     // Check if cache is from target date
     if (cached.date === targetDate) {
+      if (
+        this.isTemporaryMenuPlaceholder(cached.rawMenu) ||
+        this.isTemporaryMenuPlaceholder(cached.parsedMenu)
+      ) {
+        console.log(`Ignoring temporary placeholder cache for ${restaurantId} (${language}) on ${targetDate}`);
+        await prisma.menuCache.deleteMany({
+          where: { restaurantId, language, date: targetDate }
+        });
+        return null;
+      }
+
       console.log(`Database cache hit for ${restaurantId} (${language}) on ${targetDate}`);
       return {
         restaurantId: cached.restaurantId,

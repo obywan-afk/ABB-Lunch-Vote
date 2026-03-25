@@ -40,27 +40,121 @@ const DAY_BY_INDEX: Record<number, DaySelection | undefined> = {
   6: 'saturday',
 };
 
-/**
- * Material 2025 Login Card
- * 
- * Features:
- * - Glassmorphism: Translucent white glass with heavy blur
- * - Super-rounded corners (32px)
- * - Typography: Clean Inter/System font, large distinct headers
- * - Interactions: Smooth focus states, glowing buttons
- */
+function OceanControlsPanel({
+  windSpeed,
+  waveHeight,
+  lighting,
+  onWindSpeedChange,
+  onWaveHeightChange,
+  onLightingChange,
+  onReset,
+}: {
+  windSpeed: number;
+  waveHeight: number;
+  lighting: number;
+  onWindSpeedChange: (value: number) => void;
+  onWaveHeightChange: (value: number) => void;
+  onLightingChange: (value: number) => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="mt-4 rounded-[22px] border border-white/10 bg-[#08141b]/58 px-4 py-4 shadow-[0_22px_70px_rgba(0,0,0,.38)] backdrop-blur-xl">
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-white/6 bg-white/[0.035] px-3 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label htmlFor="wind" className="text-sm font-medium text-white/92">
+              Wind
+            </label>
+            <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs tabular-nums text-white/72">
+              {windSpeed.toFixed(1)}
+            </span>
+          </div>
+          <input
+            id="wind"
+            type="range"
+            min={0}
+            max={18}
+            step={0.1}
+            value={windSpeed}
+            onChange={(e) => onWindSpeedChange(parseFloat(e.target.value))}
+            className="w-full accent-[#d9f6ff]"
+          />
+        </div>
+
+        <div className="rounded-2xl border border-white/6 bg-white/[0.035] px-3 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label htmlFor="height" className="text-sm font-medium text-white/92">
+              Sea
+            </label>
+            <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs tabular-nums text-white/72">
+              {waveHeight.toFixed(2)}
+            </span>
+          </div>
+          <input
+            id="height"
+            type="range"
+            min={0.2}
+            max={2.2}
+            step={0.01}
+            value={waveHeight}
+            onChange={(e) => onWaveHeightChange(parseFloat(e.target.value))}
+            className="w-full accent-[#d9f6ff]"
+          />
+        </div>
+
+        <div className="rounded-2xl border border-white/6 bg-white/[0.035] px-3 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label htmlFor="light" className="text-sm font-medium text-white/92">
+              Light
+            </label>
+            <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs tabular-nums text-white/72">
+              {lighting.toFixed(2)}
+            </span>
+          </div>
+          <input
+            id="light"
+            type="range"
+            min={0.45}
+            max={1.8}
+            step={0.01}
+            value={lighting}
+            onChange={(e) => onLightingChange(parseFloat(e.target.value))}
+            className="w-full accent-[#ffe0b7]"
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/90 hover:bg-white/10"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [windSpeed, setWindSpeed] = useState(8);
+  const [windSpeed, setWindSpeed] = useState(8.2);
   const [waveHeight, setWaveHeight] = useState(0.9);
-  const [lighting, setLighting] = useState(1.1);
+  const [lighting, setLighting] = useState(1.2);
   const [paused, setPaused] = useState(false);
   const [showTweak, setShowTweak] = useState(false);
   const [minimizedLogin, setMinimizedLogin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  const resetOcean = () => {
+    setWindSpeed(8.2);
+    setWaveHeight(0.9);
+    setLighting(1.2);
+  };
 
   useEffect(() => {
     const prefetch = async (day: DaySelection, language: 'en' | 'fi') => {
@@ -118,16 +212,14 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json();
-        
-        // Store auth details
+
         sessionStorage.setItem('abb-lunch-vote-auth', 'true');
         sessionStorage.setItem('abb-lunch-vote-user', name.trim());
-        
-        // Store team info if present
+
         if (data.team) {
           sessionStorage.setItem('abb-lunch-vote-team', data.team);
         }
-        
+
         router.push('/');
       } else {
         toast({
@@ -149,8 +241,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-white font-sans antialiased">
-      {/* 3D Background */}
+    <div className="relative min-h-screen overflow-hidden font-sans antialiased text-white">
       <div className="fixed inset-0 z-0">
         <ThreeGridBackground
           windSpeed={windSpeed}
@@ -159,16 +250,20 @@ export default function LoginPage() {
           paused={paused}
         />
       </div>
-      
-      {/* Subtle overlay to dampen background contrast slightly */}
+
       <div className="pointer-events-none absolute inset-0 z-10 bg-black/10" />
 
-      {/* Main Content Area */}
+      <div className="pointer-events-none absolute left-1/2 top-6 z-20 -translate-x-1/2">
+        <div className="rounded-full border border-white/20 bg-slate-950/35 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.22em] text-white/80 shadow-[0_18px_60px_rgba(0,0,0,.24)] backdrop-blur-xl">
+          Drag To Explore The Horizon
+        </div>
+      </div>
+
       {!minimizedLogin ? (
         <div className="pointer-events-none relative z-10 flex min-h-screen items-center justify-center px-4">
           <div className="pointer-events-auto w-full max-w-[440px]">
-            <div className="rounded-[40px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl p-1">
-              <div className="rounded-[36px] bg-white/60 p-8 md:p-12 shadow-inner ring-1 ring-white/50 backdrop-blur-md">
+            <div className="rounded-[40px] border border-white/20 bg-white/10 p-1 shadow-2xl backdrop-blur-2xl">
+              <div className="rounded-[36px] bg-white/60 p-8 shadow-inner ring-1 ring-white/50 backdrop-blur-md md:p-12">
                 <div className="mb-6 flex items-center justify-end">
                   <button
                     type="button"
@@ -222,114 +317,26 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Tweak UI (centered under login card) */}
             <div className="mt-5 flex justify-center">
               <button
                 type="button"
                 onClick={() => setShowTweak((v) => !v)}
                 className="rounded-full border border-white/15 bg-[#0a1a22]/45 px-5 py-2.5 text-xs font-medium text-white/90 shadow-[0_18px_60px_rgba(0,0,0,.35)] backdrop-blur-xl hover:bg-[#0a1a22]/60"
               >
-                {showTweak ? 'Hide tweaks' : 'Tweak'}
+                {showTweak ? 'Hide ocean controls' : 'Tune the ocean'}
               </button>
             </div>
 
             {showTweak ? (
-              <div className="mt-4 rounded-[18px] border border-white/10 bg-[#0a1a22]/50 px-[14px] py-[12px] shadow-[0_18px_60px_rgba(0,0,0,.35)] backdrop-blur-xl">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold tracking-wide text-white/85">
-                    Ocean controls
-                  </p>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-[3px] text-xs text-white/60">
-                    {paused ? 'Paused' : 'Running'}
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="wind" className="text-sm text-white/90">
-                        Wind speed
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {windSpeed.toFixed(1)}
-                      </span>
-                    </div>
-                    <input
-                      id="wind"
-                      type="range"
-                      min={0}
-                      max={20}
-                      step={0.1}
-                      value={windSpeed}
-                      onChange={(e) => setWindSpeed(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="height" className="text-sm text-white/90">
-                        Wave height
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {waveHeight.toFixed(2)}
-                      </span>
-                    </div>
-                    <input
-                      id="height"
-                      type="range"
-                      min={0}
-                      max={3.5}
-                      step={0.01}
-                      value={waveHeight}
-                      onChange={(e) => setWaveHeight(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="light" className="text-sm text-white/90">
-                        Lighting (clear → overcast)
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {lighting.toFixed(2)}
-                      </span>
-                    </div>
-                    <input
-                      id="light"
-                      type="range"
-                      min={0.2}
-                      max={2.2}
-                      step={0.01}
-                      value={lighting}
-                      onChange={(e) => setLighting(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/60">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWindSpeed(8);
-                      setWaveHeight(0.9);
-                      setLighting(1.1);
-                    }}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/90 hover:bg-white/10"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaused((p) => !p)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/90 hover:bg-white/10"
-                  >
-                    {paused ? 'Resume' : 'Pause'}
-                  </button>
-                </div>
-              </div>
+              <OceanControlsPanel
+                windSpeed={windSpeed}
+                waveHeight={waveHeight}
+                lighting={lighting}
+                onWindSpeedChange={setWindSpeed}
+                onWaveHeightChange={setWaveHeight}
+                onLightingChange={setLighting}
+                onReset={resetOcean}
+              />
             ) : null}
           </div>
         </div>
@@ -354,113 +361,24 @@ export default function LoginPage() {
                 onClick={() => setShowTweak((v) => !v)}
                 className="rounded-full border border-white/15 bg-[#0a1a22]/45 px-5 py-2.5 text-xs font-medium text-white/90 shadow-[0_18px_60px_rgba(0,0,0,.35)] backdrop-blur-xl hover:bg-[#0a1a22]/60"
               >
-                {showTweak ? 'Hide tweaks' : 'Tweak'}
+                {showTweak ? 'Hide ocean controls' : 'Tune the ocean'}
               </button>
             </div>
 
             {showTweak ? (
-              <div className="mt-3 rounded-[18px] border border-white/10 bg-[#0a1a22]/50 px-[14px] py-[12px] shadow-[0_18px_60px_rgba(0,0,0,.35)] backdrop-blur-xl">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold tracking-wide text-white/85">
-                    Ocean controls
-                  </p>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-[3px] text-xs text-white/60">
-                    {paused ? 'Paused' : 'Running'}
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="wind" className="text-sm text-white/90">
-                        Wind speed
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {windSpeed.toFixed(1)}
-                      </span>
-                    </div>
-                    <input
-                      id="wind"
-                      type="range"
-                      min={0}
-                      max={20}
-                      step={0.1}
-                      value={windSpeed}
-                      onChange={(e) => setWindSpeed(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="height" className="text-sm text-white/90">
-                        Wave height
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {waveHeight.toFixed(2)}
-                      </span>
-                    </div>
-                    <input
-                      id="height"
-                      type="range"
-                      min={0}
-                      max={3.5}
-                      step={0.01}
-                      value={waveHeight}
-                      onChange={(e) => setWaveHeight(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-
-                  <div className="rounded-xl px-2 py-2 hover:bg-white/5">
-                    <div className="flex items-center justify-between gap-2">
-                      <label htmlFor="light" className="text-sm text-white/90">
-                        Lighting (clear → overcast)
-                      </label>
-                      <span className="text-sm tabular-nums text-white/60">
-                        {lighting.toFixed(2)}
-                      </span>
-                    </div>
-                    <input
-                      id="light"
-                      type="range"
-                      min={0.2}
-                      max={2.2}
-                      step={0.01}
-                      value={lighting}
-                      onChange={(e) => setLighting(parseFloat(e.target.value))}
-                      className="mt-2 w-full accent-sky-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-white/60">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWindSpeed(8);
-                      setWaveHeight(0.9);
-                      setLighting(1.1);
-                    }}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/90 hover:bg-white/10"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaused((p) => !p)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/90 hover:bg-white/10"
-                  >
-                    {paused ? 'Resume' : 'Pause'}
-                  </button>
-                </div>
-              </div>
+              <OceanControlsPanel
+                windSpeed={windSpeed}
+                waveHeight={waveHeight}
+                lighting={lighting}
+                onWindSpeedChange={setWindSpeed}
+                onWaveHeightChange={setWaveHeight}
+                onLightingChange={setLighting}
+                onReset={resetOcean}
+              />
             ) : null}
           </div>
         </div>
       ) : null}
-
-      {/* Intentionally no "how to interact" text overlay; OrbitControls still enabled. */}
     </div>
   );
 }

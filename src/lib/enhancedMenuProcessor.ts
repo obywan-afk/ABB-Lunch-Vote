@@ -1,6 +1,5 @@
 import { DbMenuCache } from './dbMenuCache'
 import { RestaurantScrapers, type ScrapedMenu } from './restaurantScrapers'
-import { parseRestaurantMenu } from '@/ai/flows/parse-restaurant-menu'
 import { translateMenuToEnglish } from './simpleTranslate'
 import { weekdayLabelFi, todayKeyEuropeHelsinki } from './menu/day'
 
@@ -17,6 +16,22 @@ function cleanMenuForDisplay(menuText: string): string {
     .replace(/---\s*(Monday|Tuesday|Wednesday|Thursday|Friday|Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai)\s*---\s*/gi, '')
     .replace(/\bbr\b\s*/g, '')
     .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function fallbackParseMenu(menuText: string): string {
+  return menuText
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\r/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
     .trim()
 }
 
@@ -212,9 +227,9 @@ export class EnhancedMenuProcessor {
       }
 
       if (!scrapedMenu.success) {
-        const parseResult = await parseRestaurantMenu({ restaurantName, menuText: scrapedMenu.rawMenu })
-        await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, scrapedMenu.rawMenu, parseResult.parsedMenu, dateKey)
-        return { rawMenu: scrapedMenu.rawMenu, parsedMenu: parseResult.parsedMenu, fromCache: false }
+        const parsedMenu = fallbackParseMenu(scrapedMenu.rawMenu)
+        await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, scrapedMenu.rawMenu, parsedMenu, dateKey)
+        return { rawMenu: scrapedMenu.rawMenu, parsedMenu, fromCache: false }
       }
 
       await DbMenuCache.setCachedProcessedMenu(restaurantId, restaurantName, language, scrapedMenu.rawMenu, scrapedMenu.rawMenu, dateKey)

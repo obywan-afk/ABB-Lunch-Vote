@@ -131,13 +131,144 @@ export class RestaurantScrapers {
 
     return `--- ${targetFi} ---\n${body}`;
   }
+
+  private static extractIssWeeklyMenuFromHtml(html: string, opts?: { targetDayFi?: (typeof DAY_FI)[number] }): string {
+    const normalized = this.decodeEntities(
+      html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li|section|article|main|h1|h2|h3|h4|h5|h6)>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\r/g, '')
+    )
+      .replace(/[ \t]+/g, ' ')
+      .replace(/[ \t]*\n[ \t]*/g, '\n')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+
+    const dayHeaderRe = /^(Ma|Ti|Ke|To|Pe)\s+\d{1,2}\.\d{1,2}\.\d{4}$/i;
+    const fiByShort: Record<string, (typeof DAY_FI)[number]> = {
+      Ma: 'Maanantai',
+      Ti: 'Tiistai',
+      Ke: 'Keskiviikko',
+      To: 'Torstai',
+      Pe: 'Perjantai',
+    };
+
+    const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+    const sections: Array<{ dayFi: (typeof DAY_FI)[number]; lines: string[] }> = [];
+    let current: { dayFi: (typeof DAY_FI)[number]; lines: string[] } | null = null;
+
+    for (const line of lines) {
+      const header = line.match(dayHeaderRe);
+      if (header) {
+        if (current?.lines.length) sections.push(current);
+        current = { dayFi: fiByShort[header[1]], lines: [] };
+        continue;
+      }
+
+      if (!current) continue;
+      if (/^(Viikko\s+\d+|Valitse tulostusnäkymä|Tulosta ruokalista|Avoinna\b|Puurobaari\b|Lounas ma-pe\b|Hävikkiruoan myynti\b|Grab & Go\b|Keittiöpäällikkö\b|Sulje\b)/i.test(line)) break;
+      if (/^(13[,.\d ]*€(?:\s*\/\s*[\d,.]+\s*€\/kg)?|L = |Dieettimerkinnät voivat)/i.test(line)) continue;
+      if (/^Image:/i.test(line)) continue;
+      current.lines.push(line);
+    }
+
+    if (current?.lines.length) sections.push(current);
+
+    const cleanedSections = sections
+      .map((section) => {
+        const filtered = section.lines.filter((line, index, arr) => {
+          if (/^(Lounas|Kasvislounas|Keitto|Salaatti(?:baari)?|Jälkiruoka|Burgeri|Grilli)$/i.test(line)) {
+            const next = arr[index + 1] ?? '';
+            return Boolean(next && !/^[\d,. ]+€/.test(next));
+          }
+          return !/^[\d,. ]+€(?:\s*\/\s*[\d,.]+\s*€\/kg)?$/.test(line);
+        });
+
+        return {
+          dayFi: section.dayFi,
+          body: this.cleanMenuText(filtered.join('\n')),
+        };
+      })
+      .filter((section) => section.body.length > 20);
+
+    if (opts?.targetDayFi) {
+      const target = cleanedSections.find((section) => section.dayFi === opts.targetDayFi);
+      return target ? `--- ${target.dayFi} ---\n${target.body}` : '';
+    }
+
+    return cleanedSections.map((section) => `--- ${section.dayFi} ---\n${section.body}`).join('\n\n');
+  }
+
+  private static extractRavintolaValimoMenuFromHtml(
+    html: string,
+    targetDayFi: (typeof DAY_FI)[number]
+  ): string | null {
+    const normalized = this.decodeEntities(
+      html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li|section|article|main|h1|h2|h3|h4|h5|h6)>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\r/g, '')
+    )
+      .replace(/[ \t]+/g, ' ')
+      .replace(/[ \t]*\n[ \t]*/g, '\n')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+
+    const dayHeaderRe = /^(Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai)(?:\s+\d{1,2}\.\d{1,2}\.\d{4})?$/i;
+    const stopRe = /^(Contact Details|Aukioloajat|Copyright\b|Follow Us\b|Meiltä loistavan palvelun)/i;
+    const categoryRe = /^(Päivän erikoissalaatti|Päivän keitto|Lämpimät pääruoat|Vegaaninen|Päivän pizza|Blini-perjantai.*)$/i;
+
+    const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+    const sections: Array<{ dayFi: (typeof DAY_FI)[number]; lines: string[] }> = [];
+    let current: { dayFi: (typeof DAY_FI)[number]; lines: string[] } | null = null;
+
+    for (const line of lines) {
+      const dayHeader = line.match(dayHeaderRe);
+      if (dayHeader) {
+        if (current?.lines.length) sections.push(current);
+        current = { dayFi: dayHeader[1] as (typeof DAY_FI)[number], lines: [] };
+        continue;
+      }
+
+      if (!current) continue;
+      if (stopRe.test(line)) break;
+      if (/^(Buffet Menu|Viikon lounas|13,70€|HUM:)/i.test(line)) continue;
+      current.lines.push(line);
+    }
+
+    if (current?.lines.length) sections.push(current);
+
+    const target = sections.find((section) => section.dayFi === targetDayFi);
+    if (!target) return null;
+
+    const filtered = target.lines.filter((line) => {
+      if (/^(Salaattibaari lounas|Salaattibaari|Päivän pizza:?)$/i.test(line)) return false;
+      if (/^\d+[,.]\d+€(?:\/\d+[,.]\d+€)?$/i.test(line)) return false;
+      if (/^(Image:|050-|asiakaspalvelu@)/i.test(line)) return false;
+      return true;
+    });
+
+    const body = filtered
+      .map((line) => categoryRe.test(line) ? `${line}:` : line)
+      .join('\n');
+
+    const cleaned = this.cleanMenuText(`--- ${targetDayFi} ---\n${body}`);
+    return cleaned.length > 40 ? cleaned : null;
+  }
   
   private static async fetchWithRetry(url: string, retries = 3): Promise<string> {
     console.log(`🌐 Fetching: ${url}`)
     
     for (let i = 0; i < retries; i++) {
       try {
-        const response = await fetch(url, {
+        const response = await this.fetchWithCertificateFallback(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -169,7 +300,7 @@ export class RestaurantScrapers {
     console.log(`🌐 Fetching JSON: ${url}`)
     for (let i = 0; i < retries; i++) {
       try {
-        const res = await fetch(url, {
+        const res = await this.fetchWithCertificateFallback(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0',
             'Accept': 'application/json,text/plain,*/*',
@@ -185,6 +316,60 @@ export class RestaurantScrapers {
       }
     }
     throw new Error('All JSON retry attempts failed')
+  }
+
+  private static async fetchWithCertificateFallback(url: string, init: RequestInit): Promise<Response> {
+    try {
+      return await fetch(url, init);
+    } catch (error) {
+      const code = (error as { cause?: { code?: string } })?.cause?.code;
+      if (!/ISSUER_CERT|SELF_SIGNED_CERT|UNABLE_TO_VERIFY_LEAF_SIGNATURE/i.test(code ?? '')) {
+        throw error;
+      }
+
+      console.log(`⚠️ Retrying ${url} with relaxed TLS verification due to local certificate trust issue (${code})`);
+      const https = await import('node:https');
+      const response = await new Promise<Response>((resolve, reject) => {
+        const request = https.request(url, {
+          method: init.method ?? 'GET',
+          headers: init.headers as Record<string, string> | undefined,
+          rejectUnauthorized: false,
+        }, (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          res.on('end', () => {
+            const encodingHeader = res.headers['content-encoding'];
+            const encoding = Array.isArray(encodingHeader) ? encodingHeader[0] : encodingHeader;
+            let body = Buffer.concat(chunks);
+
+            if (encoding) {
+              const zlib = require('node:zlib') as typeof import('node:zlib');
+              if (/br/i.test(encoding)) body = zlib.brotliDecompressSync(body);
+              else if (/gzip/i.test(encoding)) body = zlib.gunzipSync(body);
+              else if (/deflate/i.test(encoding)) body = zlib.inflateSync(body);
+            }
+
+            resolve(new Response(body, {
+              status: res.statusCode ?? 200,
+              headers: new Headers(
+                Object.entries(res.headers).flatMap(([key, value]) =>
+                  Array.isArray(value)
+                    ? value.map((entry) => [key, entry] as const)
+                    : value
+                      ? [[key, value] as const]
+                      : []
+                )
+              ),
+            }));
+          });
+        });
+
+        request.on('error', reject);
+        request.end();
+      });
+
+      return response;
+    }
   }
 
   private static isTuesday(dateStr: string): boolean {
@@ -574,113 +759,14 @@ export class RestaurantScrapers {
   static async scrapeValimoPark(opts?: { targetDayFi?: string }): Promise<ScrapedMenu> {
     const restaurantId = 'valimo-park';
     const restaurantName = 'Faundori';
-    console.log(`🍽️ Scraping Faundori (ISS + Flockler)…`);
+    console.log(`🍽️ Scraping Faundori (ISS page)…`);
 
     try {
-      const apiUrl = 'https://api.flockler.com/v1/sites/8357/articles?count=12&sideloading=false';
-      const json = await this.fetchJsonWithRetry<any>(apiUrl);
-
-      const articles = Array.isArray(json?.articles) ? json.articles : [];
-      if (!articles.length) throw new Error('No Flockler articles returned');
-
-      const days = [...DAY_FI, ...DAY_EN];
-      const weekdayRe = new RegExp(`\\b(${days.join('|')})\\b`, 'i');
-
-      // Filter articles to only those from Faundori section
-      const valimoParkArticles = articles.filter((a: any) =>
-        a?.section?.section_url === 'valimo-park' || a?.section?.name === 'Faundori'
+      const html = await this.fetchWithRetry('https://ravintolapalvelut.iss.fi/ravintola-faundori/');
+      const targetDayFi = DAY_FI.find((day) => day.toLowerCase() === opts?.targetDayFi?.toLowerCase());
+      const rawMenu = this.cleanMenuText(
+        this.extractIssWeeklyMenuFromHtml(html, { targetDayFi })
       );
-
-      console.log(`🔍 Found ${valimoParkArticles.length} Faundori articles out of ${articles.length} total`);
-
-      if (!valimoParkArticles.length) {
-        throw new Error('No Faundori articles found in Flockler feed');
-      }
-
-      // Find the most relevant article with weekday content
-      const article =
-        valimoParkArticles.find((a: any) => weekdayRe.test(`${a?.title ?? ''} ${a?.body ?? ''}`)) ??
-        valimoParkArticles[0];
-
-      console.log(`🔍 Using article: "${article?.title}" from section: "${article?.section?.name}"`);
-
-      let html = String(article?.body || article?.title || '');
-      if (!html) throw new Error('Flockler article has no body/title');
-
-      // Normalize to plain text while keeping line breaks
-      let text = html
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/(p|li|h\d|div)>/gi, '\n')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\r/g, '')
-        .replace(/[ \t]+\n/g, '\n')
-        .replace(/\n{3,}/g, '\n\n');
-
-      text = this.decodeEntities(text).trim();
-      console.log('🔎 Faundori cleaned head:', text.slice(0, 400));
-
-      // Find markers for each weekday
-      const marks: { name: string; pos: number }[] = [];
-      let m: RegExpExecArray | null;
-      const findRe = new RegExp(`\\b(${days.join('|')})\\b`, 'gi');
-      while ((m = findRe.exec(text)) !== null) marks.push({ name: m[1], pos: m.index });
-      marks.sort((a, b) => a.pos - b.pos);
-      console.log('🧭 VP weekday markers:', marks.length);
-
-      const headerStartRe = new RegExp(
-        `^\\s*(${days.join('|')})\\b(?:\\s*\\d{1,2}[./-]\\d{1,2}\\.?)*\\s*:?\\s*`,
-        'i'
-      );
-      const reBoiler = /(EU-asetus|regulation|Hinnat|Prices|We reserve rights)/i;
-
-      // Build day chunks first
-      const chunks: { dayFi: string; dayLabel: string; body: string }[] = [];
-      for (let i = 0; i < marks.length; i++) {
-        const start = marks[i].pos;
-        const end = i < marks.length - 1 ? marks[i + 1].pos : text.length;
-        const chunk = text.slice(start, end).trim();
-
-        const header = chunk.match(headerStartRe);
-        const dayLabel = header?.[1] ?? marks[i].name;
-        const dayFiGuess = DAY_EN.includes(dayLabel as any)
-          ? DAY_EN_TO_FI[dayLabel as (typeof DAY_EN)[number]]
-          : (dayLabel as (typeof DAY_FI)[number]);
-
-        let bodyChunk = header ? chunk.slice(header[0].length) : chunk;
-        const body = bodyChunk
-          .split('\n')
-          .map(s => s.replace(/\s+/g, ' ').trim())
-          .filter(s => s.length && !reBoiler.test(s))
-          .join('\n');
-
-        if (body.length) {
-          chunks.push({ dayFi: dayFiGuess, dayLabel, body });
-        }
-      }
-
-      // If a target day is requested, keep ONLY that day
-      const targetFi = opts?.targetDayFi;
-      let rawMenu = '';
-      if (targetFi) {
-        const one = chunks.find(c => c.dayFi.toLowerCase() === targetFi.toLowerCase());
-        if (!one) {
-          return {
-            restaurantId,
-            restaurantName,
-            rawMenu: '',
-            success: false,
-            error: `Target day ${targetFi} not found in Flockler content`,
-          };
-        }
-        rawMenu = `--- ${one.dayFi} ---\n${one.body}\n`;
-      } else {
-        // Otherwise keep all days (legacy behaviour)
-        rawMenu = chunks
-          .map(c => `--- ${c.dayLabel} ---\n${c.body}\n`)
-          .join('\n');
-      }
-
-      rawMenu = this.cleanMenuText(rawMenu);
       const success = rawMenu.length > 40;
 
       console.log(
@@ -689,9 +775,9 @@ export class RestaurantScrapers {
       return {
         restaurantId,
         restaurantName,
-        rawMenu: success ? rawMenu : 'Could not extract menu from Faundori (Flockler)',
+        rawMenu: success ? rawMenu : 'Could not extract menu from Faundori (ISS page)',
         success,
-        error: success ? undefined : 'Menu content not found or too short',
+        error: success ? undefined : `Menu content not found${targetDayFi ? ` for ${targetDayFi}` : ''}`,
       };
     } catch (error: any) {
       console.log(`❌ Faundori scraping failed:`, error);
@@ -997,116 +1083,85 @@ export class RestaurantScrapers {
   // AI-powered Ravintola Valimo scraper
   static async scrapeRavintolaValimoAI(options: AiScrapingOptions): Promise<ScrapedMenu> {
     const { targetDay, language } = options;
-    console.log(`🤖 AI-powered scraping for Ravintola Valimo - Day: ${targetDay}, Language: ${language}`)
+    console.log(`🍽️ Scraping Ravintola Valimo - Day: ${targetDay}, Language: ${language}`)
     
     try {
       let html = await this.fetchWithRetry('https://www.ravintolavalimo.fi/')
-      
-      // Clean HTML but preserve menu content structure
-      html = html
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+      const extracted = this.extractRavintolaValimoMenuFromHtml(
+        html,
+        targetDay as (typeof DAY_FI)[number]
+      );
 
-      // Try to find the main menu section, but use more content if section is small
-      const menuSection = html.match(/<div[^>]*id="Lounas"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/i);
-      let contentToProcess = menuSection?.[1] || '';
-
-      // If the extracted section is too small, use broader body content
-      if (contentToProcess.length < 5000) {
-        console.log(`Menu section too small (${contentToProcess.length} chars), using broader extraction...`);
-        const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-        contentToProcess = bodyMatch?.[1] || html;
-      }
-
-      // Limit to reasonable size for AI processing
-      contentToProcess = contentToProcess.substring(0, 20000);
-
-      // Try deterministic day slice first (fast path, avoids AI flakiness)
-      const manualSlice = this.extractDaySectionFromHtml(contentToProcess, targetDay as (typeof DAY_FI)[number]);
-      if (manualSlice) {
-        const cleaned = this.cleanMenuText(manualSlice);
+      if (extracted) {
+        const cleaned = this.cleanMenuText(extracted);
         const success = cleaned.length > 40;
-        console.log(`✅ Manual extraction for Ravintola Valimo ${targetDay}: ${success ? 'SUCCESS' : 'FAILED'} (len=${cleaned.length})`);
+        console.log(`✅ Deterministic extraction for Ravintola Valimo ${targetDay}: ${success ? 'SUCCESS' : 'FAILED'} (len=${cleaned.length})`);
         return {
           restaurantId: 'ravintola-valimo',
           restaurantName: 'Ravintola Valimo',
           rawMenu: cleaned,
           success,
-          error: success ? undefined : `Manual extraction too short for ${targetDay}`
+          error: success ? undefined : `HTML extraction too short for ${targetDay}`
         };
       }
 
-      console.log(`📤 Sending ${contentToProcess.length} characters to AI for ${targetDay} menu extraction...`);
-
-      // Use AI to extract specific day's menu
-      const aiResult = await aiMenuExtractor({
-        html: contentToProcess,
-        restaurantName: 'Ravintola Valimo',
-        targetDay: targetDay,
-        language: language
-      });
-
-      if (!aiResult.output?.success || !aiResult.output.targetDayMenu?.length) {
-        const message =
-          aiResult.output?.error &&
-          /too many requests|quota|rate limit/i.test(aiResult.output.error)
-            ? `Menu temporarily unavailable for ${targetDay}. Our AI parser hit its rate limit — please check ravintolavalimo.fi directly.`
-            : ''
+      const manualSlice = this.extractDaySectionFromHtml(html, targetDay as (typeof DAY_FI)[number]);
+      if (manualSlice) {
+        const cleaned = this.cleanMenuText(manualSlice);
         return {
           restaurantId: 'ravintola-valimo',
           restaurantName: 'Ravintola Valimo',
-          rawMenu: message,
-          success: Boolean(message),
-          error: aiResult.output?.error || `AI found no menu items for ${targetDay}`
-        }
+          rawMenu: cleaned,
+          success: cleaned.length > 40,
+          error: cleaned.length > 40 ? undefined : `Fallback HTML extraction too short for ${targetDay}`
+        };
       }
 
-      // Same post-processing/validation as Factory
-      const cleanedList = aiResult.output.targetDayMenu
-        .map(s => s.replace(/\s+/g, ' ').trim())
-        .filter(Boolean)
-        .filter(s => !/(prices|hinnat|price|opening hours|aukiolo|ilmainen pysäköinti|pysäköinti|parking)/i.test(s));
+      // Keep the AI fallback for unexpected markup changes, but it should no longer be the common path.
+      html = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '');
 
-      if (cleanedList.length < 3) {
+      const aiResult = await aiMenuExtractor({
+        html: html.substring(0, 20000),
+        restaurantName: 'Ravintola Valimo',
+        targetDay,
+        language
+      });
+
+      if (!aiResult.output?.success || !aiResult.output.targetDayMenu?.length) {
         return {
           restaurantId: 'ravintola-valimo',
           restaurantName: 'Ravintola Valimo',
           rawMenu: '',
           success: false,
-          error: 'Too few items after validation'
+          error: aiResult.output?.error || `No ${targetDay} menu items found`
         }
       }
 
-      // Format the extracted data
-      let rawMenu = `--- ${targetDay} ---\n` + cleanedList.join('\n') + '\n';
+      const cleanedList = aiResult.output.targetDayMenu
+        .map(s => s.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .filter(s => !/(prices|hinnat|price|opening hours|aukiolo|ilmainen pysäköinti|pysäköinti|parking)/i.test(s));
 
-      rawMenu = this.cleanMenuText(rawMenu);
-      const success = rawMenu.length > 50 && cleanedList.length >= 3;
-
-      console.log(`✅ AI extraction result: ${success ? 'SUCCESS' : 'FAILED'} - Found ${cleanedList.length} items for ${targetDay}`);
-
+      const rawMenu = this.cleanMenuText(`--- ${targetDay} ---\n${cleanedList.join('\n')}`);
       return {
         restaurantId: 'ravintola-valimo',
         restaurantName: 'Ravintola Valimo',
-        rawMenu: success ? rawMenu : `AI could not find ${targetDay} menu at Ravintola Valimo`,
-        success,
-        error: success ? undefined : `No ${targetDay} menu items found`
+        rawMenu,
+        success: rawMenu.length > 40 && cleanedList.length >= 3,
+        error: rawMenu.length > 40 && cleanedList.length >= 3 ? undefined : `No ${targetDay} menu items found`
       }
 
     } catch (error) {
       console.log(`❌ AI-powered Ravintola Valimo scraping failed:`, error)
-      const message =
-        error instanceof Error &&
-        /too many requests|quota|rate limit/i.test(error.message)
-          ? 'Menu temporarily unavailable — AI parser is rate-limited. Please check ravintolavalimo.fi directly.'
-          : ''
       return {
         restaurantId: 'ravintola-valimo',
         restaurantName: 'Ravintola Valimo',
-        rawMenu: message,
-        success: Boolean(message),
-        error: error instanceof Error ? error.message : 'AI extraction failed'
+        rawMenu: '',
+        success: false,
+        error: error instanceof Error ? error.message : 'HTML extraction failed'
       }
     }
   }

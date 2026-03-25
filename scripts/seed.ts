@@ -17,8 +17,8 @@ const restaurants = [
   {
     id: 'valimo-park',
     name: 'Faundori',
-    location: 'Helsinki',
-    description: 'Park-side dining with seasonal menu'
+    location: 'Pitäjänmäki',
+    description: 'ISS weekly menu page'
   },
   {
     id: 'valaja',
@@ -41,8 +41,8 @@ const restaurants = [
   {
     id: 'ravintola-valimo',
     name: 'Ravintola Valimo',
-    location: 'Helsinki',
-    description: 'Classic restaurant with local specialties'
+    location: 'Pitäjänmäki',
+    description: 'HTML menu extraction on Valimo site'
   }
 ]
 
