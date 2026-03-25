@@ -110,20 +110,6 @@ export function MotionRestaurantCard({
 
           <div className="mt-2">
             <div className="flex flex-col gap-3 sm:flex-row">
-              {restaurant.url && (
-                <a
-                  href={restaurant.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/20"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span aria-hidden="true" className="mr-2">
-                    ↗
-                  </span>
-                  Visit Website
-                </a>
-              )}
               <div className="flex-1">
                 {isVotingOpen ? (
                   hasVotedForThis ? (

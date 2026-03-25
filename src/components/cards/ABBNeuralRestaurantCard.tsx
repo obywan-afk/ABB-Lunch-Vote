@@ -148,17 +148,6 @@ export function ABBNeuralRestaurantCard({
 
           <div className="mt-4">
             <div className="flex flex-col gap-3 sm:flex-row">
-              {restaurant.url && (
-                <a
-                  href={restaurant.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded border border-cyan-400/40 bg-cyan-400/10 px-4 py-3 text-sm font-bold font-mono text-cyan-300 transition hover:border-cyan-300 hover:bg-cyan-400/20"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  ↗ VISIT SITE
-                </a>
-              )}
               <div className="flex-1">
                 {isVotingOpen ? (
                   hasVotedForThis ? (

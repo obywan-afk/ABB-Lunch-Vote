@@ -133,14 +133,6 @@ export function RestaurantCard({
           Votes: {restaurant.votes}
         </Badge>
         <div className="flex items-center gap-2">
-          {restaurant.url && (
-            <Button asChild variant="outline" className="shadow">
-              <a href={restaurant.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visit Website
-              </a>
-            </Button>
-          )}
           <Button
             onClick={onVote}
             disabled={!isVotingOpen || userHasVoted}

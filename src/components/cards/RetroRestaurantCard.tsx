@@ -143,17 +143,6 @@ export function RetroRestaurantCard({
 
           <div className="mt-4">
             <div className="flex flex-col gap-3 sm:flex-row">
-              {restaurant.url && (
-                <a
-                  href={restaurant.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded border border-pink-400/40 bg-gradient-to-r from-purple-600/40 to-pink-600/40 px-4 py-3 text-sm font-black tracking-wider text-white transition hover:border-cyan-400/80"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  ▸ VISIT SITE
-                </a>
-              )}
               <div className="flex-1">
                 {isVotingOpen ? (
                   hasVotedForThis ? (
