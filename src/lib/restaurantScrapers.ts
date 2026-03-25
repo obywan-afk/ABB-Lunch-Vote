@@ -43,6 +43,9 @@ const DAY_EN_TO_FI: Record<(typeof DAY_EN)[number], (typeof DAY_FI)[number]> = {
   Friday: 'Perjantai',
 };
 
+const MENU_NOISE_RE =
+  /(lunch buffet|catering services|green deli|greendeli|company - and private events|get connected|about us|our location|message \*|email \*|name \*|live grill|welcome to restaurant valimo|welcome to enjoy our mouth-watering dishes|pre-order 2 days)/i;
+
 const WEEKDAY_FI = [
   'Sunnuntai','Maanantai','Tiistai','Keskiviikko','Torstai','Perjantai','Lauantai'
 ] as const;
@@ -222,7 +225,7 @@ export class RestaurantScrapers {
       .trim();
 
     const dayHeaderRe = /^(Maanantai|Tiistai|Keskiviikko|Torstai|Perjantai)(?:\s+\d{1,2}\.\d{1,2}\.\d{4})?$/i;
-    const stopRe = /^(Contact Details|Aukioloajat|Copyright\b|Follow Us\b|Meiltä loistavan palvelun)/i;
+    const stopRe = /^(Contact Details|Aukioloajat|Copyright\b|Follow Us\b|Meiltä loistavan palvelun|Get Connected|About Us|Our Location|GreenDeli|Company - And Private Events|Lunch buffet\b|Catering Services\b)/i;
     const categoryRe = /^(Päivän erikoissalaatti|Päivän keitto|Lämpimät pääruoat|Vegaaninen|Päivän pizza|Blini-perjantai.*)$/i;
 
     const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -260,7 +263,10 @@ export class RestaurantScrapers {
       .join('\n');
 
     const cleaned = this.cleanMenuText(`--- ${targetDayFi} ---\n${body}`);
-    return cleaned.length > 40 ? cleaned : null;
+    if (cleaned.length <= 40) return null;
+    if (MENU_NOISE_RE.test(cleaned)) return null;
+    if (DAY_FI.filter((day) => day !== targetDayFi).some((day) => cleaned.includes(day))) return null;
+    return cleaned;
   }
   
   private static async fetchWithRetry(url: string, retries = 3): Promise<string> {
@@ -1108,6 +1114,15 @@ export class RestaurantScrapers {
       const manualSlice = this.extractDaySectionFromHtml(html, targetDay as (typeof DAY_FI)[number]);
       if (manualSlice) {
         const cleaned = this.cleanMenuText(manualSlice);
+        if (MENU_NOISE_RE.test(cleaned)) {
+          return {
+            restaurantId: 'ravintola-valimo',
+            restaurantName: 'Ravintola Valimo',
+            rawMenu: '',
+            success: false,
+            error: `Fallback extraction captured page content instead of ${targetDay} menu`
+          };
+        }
         return {
           restaurantId: 'ravintola-valimo',
           restaurantName: 'Ravintola Valimo',
@@ -1116,6 +1131,14 @@ export class RestaurantScrapers {
           error: cleaned.length > 40 ? undefined : `Fallback HTML extraction too short for ${targetDay}`
         };
       }
+
+      return {
+        restaurantId: 'ravintola-valimo',
+        restaurantName: 'Ravintola Valimo',
+        rawMenu: '',
+        success: false,
+        error: `No validated ${targetDay} menu found in Ravintola Valimo HTML`
+      };
 
       // Keep the AI fallback for unexpected markup changes, but it should no longer be the common path.
       html = html
