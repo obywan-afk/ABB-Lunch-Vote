@@ -5,51 +5,51 @@ import { dayOverrideToFiEn, dateForNextWeekdayFi, todayKeyEuropeHelsinki, weekda
 
 type Language = 'en' | 'fi'
 
-// Track if cleanup has run today
-let lastCleanupDate: string | null = null;
+let lastCleanupDate: string | null = null
+
+const RESTAURANT_URLS: Record<string, string> = {
+  tellus: 'https://www.compass-group.fi/menuapi/feed/rss/current-week?costNumber=3105&language=en/',
+  por: 'https://por.fi/menu/',
+  'valimo-park': 'https://ravintolapalvelut.iss.fi/valimo-park',
+  valaja: 'https://www.sodexo.fi/en/restaurants/restaurant-valaja',
+  'antell-kuohu': 'https://www.antell.fi/ravintolat/ravintola-kuohu/',
+  factory: 'https://ravintolafactory.com/lounasravintolat/ravintolat/helsinki-pitajanmaki/',
+  'ravintola-valimo': 'https://www.ravintolavalimo.fi/',
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const language = (searchParams.get('language') || 'en') as Language
   const forceFresh = searchParams.get('fresh') === 'true'
 
-  // Debug day ?day=monday|tuesday|...
   const dayParam = searchParams.get('day') || ''
   const dayOverride = dayParam ? dayOverrideToFiEn(dayParam) : null
   const targetDayFi = dayOverride?.fi || undefined
-  
-  // Check if requested day is today (case-insensitive comparison)
+
   const todayFi = weekdayLabelFi()
   const isToday = targetDayFi && targetDayFi.toLowerCase() === todayFi.toLowerCase()
-  
-  // Use today's date if requesting today, otherwise get next occurrence
-  const dateKey = targetDayFi 
-    ? (isToday ? todayKeyEuropeHelsinki() : dateForNextWeekdayFi(targetDayFi))
+  const dateKey = targetDayFi
+    ? isToday
+      ? todayKeyEuropeHelsinki()
+      : dateForNextWeekdayFi(targetDayFi)
     : undefined
   const effectiveDateKey = dateKey ?? todayKeyEuropeHelsinki()
 
-  console.log(`🚀 Processing menus for language: ${language} (fresh=${forceFresh}, day=${targetDayFi ?? 'auto'}, dateKey=${dateKey ?? 'today'})`)
+  console.log(`Processing menus for language: ${language} (fresh=${forceFresh}, day=${targetDayFi ?? 'auto'}, dateKey=${dateKey ?? 'today'})`)
 
-  // Auto-cleanup: Run once per day on first request
-  const today = todayKeyEuropeHelsinki();
+  const today = todayKeyEuropeHelsinki()
   if (lastCleanupDate !== today) {
-    try {
-      // Only call cleanup if NEXTAUTH_URL is configured
-      if (process.env.NEXTAUTH_URL) {
-        const response = await fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
-          method: 'POST',
-          headers: {
-            'x-cron-secret': process.env.CRON_SECRET || ''
-          }
-        });
-        const result = await response.json();
-        console.log('Auto-cleanup result:', result);
-      } else {
-        console.log('Skipping auto-cleanup: NEXTAUTH_URL not configured');
-      }
-      lastCleanupDate = today;
-    } catch (error) {
-      console.error('Auto-cleanup failed:', error);
+    lastCleanupDate = today
+    if (process.env.NEXTAUTH_URL) {
+      void fetch(`${process.env.NEXTAUTH_URL}/api/cache/cleanup`, {
+        method: 'POST',
+        headers: { 'x-cron-secret': process.env.CRON_SECRET || '' },
+      })
+        .then((response) => response.json())
+        .then((result) => console.log('Auto-cleanup result:', result))
+        .catch((error) => console.error('Auto-cleanup failed:', error))
+    } else {
+      console.log('Skipping auto-cleanup: NEXTAUTH_URL not configured')
     }
   }
 
@@ -68,78 +68,60 @@ export async function GET(request: NextRequest) {
       })
     }
 
-  const processedMenus: Array<{
-    id: string
-    name: string
-    location: string | null
-    description: string | null
-    rawSnippet?: string
-    parsedMenu?: string
-    fromCache: boolean
-    dateKey: string
-    error?: boolean
-    status: {
-      scraped: boolean
-      parse: 'ok' | 'rate_limited' | 'failed' | 'skipped'
-      note: string
-      }
-    }> = []
+    const restaurants = await Promise.all(
+      dbRestaurants.map(async (restaurant) => {
+        try {
+          const result = await EnhancedMenuProcessor.processRestaurantWithCache(
+            restaurant.id,
+            restaurant.name,
+            language,
+            { targetDayFi, dateKey, skipCache: !!forceFresh }
+          )
 
-    let aiLimited = false // kept for response shape
-
-    for (const r of dbRestaurants) {
-      try {
-        const result = await EnhancedMenuProcessor.processRestaurantWithCache(
-          r.id,
-          r.name,
-          language,
-          {
-            targetDayFi,
-            dateKey,
-            skipCache: !!forceFresh, // only bypass when "fresh=true"
+          return {
+            id: restaurant.id,
+            name: restaurant.name,
+            location: restaurant.location,
+            description: restaurant.description,
+            url: RESTAURANT_URLS[restaurant.id],
+            rawSnippet: result.rawMenu?.slice(0, 160),
+            parsedMenu: result.parsedMenu,
+            fromCache: !forceFresh && result.fromCache,
+            dateKey: effectiveDateKey,
+            status: {
+              scraped: true,
+              parse: 'ok' as const,
+              note: result.fromCache
+                ? `Loaded from DB cache (${effectiveDateKey})`
+                : `Live scraped & cached (${effectiveDateKey})`,
+            },
           }
-        )
-        processedMenus.push({
-          id: r.id,
-          name: r.name,
-          location: r.location,
-          description: r.description,
-          rawSnippet: result.rawMenu?.slice(0,160),
-          parsedMenu: result.parsedMenu,
-          fromCache: !forceFresh && result.fromCache,
-          dateKey: effectiveDateKey,
-          status: {
-            scraped: true,
-            parse: 'ok',
-            note: result.fromCache
-              ? `Loaded from DB cache (${effectiveDateKey})`
-              : `Live scraped & cached (${effectiveDateKey})`
+        } catch (error) {
+          console.log(`Unexpected error processing ${restaurant.name}:`, error)
+          return {
+            id: restaurant.id,
+            name: restaurant.name,
+            location: restaurant.location,
+            description: restaurant.description,
+            url: RESTAURANT_URLS[restaurant.id],
+            fromCache: false,
+            dateKey: effectiveDateKey,
+            error: true,
+            status: { scraped: false, parse: 'failed' as const, note: 'Unexpected error occurred' },
           }
-        })
-      } catch (e) {
-        console.log(`❌ Unexpected error processing ${r.name}:`, e)
-        processedMenus.push({
-          id: r.id,
-          name: r.name,
-          location: r.location,
-          description: r.description,
-          fromCache: false,
-          dateKey: effectiveDateKey,
-          error: true,
-          status: { scraped: false, parse: 'failed', note: 'Unexpected error occurred' },
-        })
-      }
-    }
+        }
+      })
+    )
 
     return NextResponse.json({
       success: true,
       language,
-      restaurants: processedMenus,
-      meta: { aiLimited, liveDataOnly: true, cacheSource: 'database' },
+      restaurants,
+      meta: { aiLimited: false, liveDataOnly: true, cacheSource: 'database' },
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('❌ Menu processing failed:', error)
+    console.error('Menu processing failed:', error)
     return NextResponse.json({ error: 'Failed to process menus' }, { status: 500 })
   }
 }

@@ -132,15 +132,25 @@ export function RestaurantCard({
         <Badge variant="secondary" className="text-sm font-semibold">
           Votes: {restaurant.votes}
         </Badge>
-        <Button
-          onClick={onVote}
-          disabled={!isVotingOpen || userHasVoted}
-          variant={hasVotedForThis ? "default" : "outline"}
-          className="shadow"
-        >
-          <Vote className="mr-2 h-4 w-4" />
-          {hasVotedForThis ? 'Voted' : 'Vote for this'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {restaurant.url && (
+            <Button asChild variant="outline" className="shadow">
+              <a href={restaurant.url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Visit Website
+              </a>
+            </Button>
+          )}
+          <Button
+            onClick={onVote}
+            disabled={!isVotingOpen || userHasVoted}
+            variant={hasVotedForThis ? "default" : "outline"}
+            className="shadow"
+          >
+            <Vote className="mr-2 h-4 w-4" />
+            {hasVotedForThis ? 'Voted' : 'Vote for this'}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

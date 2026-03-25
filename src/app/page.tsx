@@ -114,6 +114,15 @@ export default function Home() {
         const data = await response.json()
 
         if (data.success) {
+          try {
+            sessionStorage.setItem(
+              prefetchKey,
+              JSON.stringify({ at: Date.now(), payload: data })
+            )
+          } catch {
+            // ignore session storage write failures
+          }
+
           const processedRestaurants: Restaurant[] = data.restaurants.map((r: any) => ({
             id: r.id,
             name: r.name,

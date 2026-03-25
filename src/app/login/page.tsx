@@ -89,18 +89,8 @@ export default function LoginPage() {
 
     const day: DaySelection = DAY_BY_INDEX[new Date().getDay()] ?? 'tuesday';
 
-    const run = () => {
-      void prefetch(day, 'en');
-      void prefetch(day, 'fi');
-    };
-
-    if (typeof (window as any).requestIdleCallback === 'function') {
-      (window as any).requestIdleCallback(run, { timeout: 1500 });
-      return;
-    }
-
-    const id = window.setTimeout(run, 250);
-    return () => window.clearTimeout(id);
+    void prefetch(day, 'en');
+    void prefetch(day, 'fi');
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
